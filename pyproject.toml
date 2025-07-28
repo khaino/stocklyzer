@@ -1,7 +1,7 @@
 [project]
 name = "stocklyzer"
 version = "0.1.0"
-description = "A simple command-line stock analysis tool"
+description = "A command line interface for stock analysis"
 readme = "README.md"
 authors = [
   {name = "Pau Sian Khai", email = "pskhai@gmail.com"}
@@ -10,15 +10,29 @@ maintainers = [
   {name = "Pau Sian Khai", email = "pskhai@gmail.com"}
 ]
 classifiers = [
-
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Environment :: Console",
+    "Topic :: Office/Business :: Financial :: Investment",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 dependencies = [
-  "typer"
+  # Core library dependencies (minimal)
 ]
-requires-python = ">= 3.10"
+requires-python = ">= 3.11"
 
 [project.optional-dependencies]
+cli = [
+  "typer>=0.9.0",
+  "rich>=10.11.0",
+  "yfinance>=0.2.0"
+]
 test = [
     "coverage",  # testing
     "pytest",  # testing
@@ -26,9 +40,10 @@ test = [
     "ty", # checking types
     "ipdb"    
 ]
+# Install with: pip install stocklyzer[cli] for CLI functionality
+# Or: pip install stocklyzer[test] for development
 
 [project.urls]
-
 bugs = "https://github.com/khaino/stocklyzer/issues"
 changelog = "https://github.com/khaino/stocklyzer/blob/master/changelog.md"
 homepage = "https://github.com/khaino/stocklyzer"
@@ -40,7 +55,7 @@ package-dir = {"" = "src"}
 "*" = ["*.*"]
 
 [project.scripts]
-stocklyzer = "stocklyzer.cli:app"
+slz = "cli.main:app"
 
 [tool.ty]
 # All rules are enabled as "error" by default; no need to specify unless overriding.
