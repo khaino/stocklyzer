@@ -4,7 +4,7 @@
 
 A command line interface for stock analysis
 
-* Free software: MIT License
+* Free software: Apache 2.0 License
 
 ## Features
 
