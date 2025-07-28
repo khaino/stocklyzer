@@ -107,3 +107,8 @@ ENV/
 .vscode/
 .idea/
 
+.specstory/
+
+.ruff_cache/
+
+.cursorindexingignore
