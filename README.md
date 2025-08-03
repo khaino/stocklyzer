@@ -14,6 +14,10 @@ A modern command line interface for comprehensive stock analysis
 * 💰 **Comprehensive metrics** - Price, Fundamentals, Growth, and Dividends
 * 🚀 **Multi-year growth tracking** - 1, 2, 3, 5, and 10-year performance
 * 💸 **Dividend information** - Yield percentages for income investors
+* 📋 **Financial statements** - Annual and quarterly income statements with growth rates
+* 🏛️ **Balance sheet analysis** - Assets, liabilities, equity, and shares outstanding
+* 📊 **Professional tables** - Rich table formatting with perfect alignment
+* 🎯 **Smart color coding** - Green for positive metrics, red for concerning trends
 * 🌈 **Terminal-friendly colors** - works on both dark and light themes
 * ⚡ **Ultra-fast and minimal** - essential information only
 
@@ -74,6 +78,24 @@ Price: $202.38 ▼ -2.50%    [███░░░░░░░] 52-week range
   ├─   EPS (TTM)     $6.60      ├─   3 Years    +28.51% ▲   
   ├─   Book Value    $4.43      ├─   5 Years    +91.11% ▲   
   └─   Dividend      0.51%      └─   10 Years   +662.93% ▲  
+
+                     📈 Annual Financial Statement                     
+┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┓
+┃ Metric               ┃         2024-09-30 ┃         2023-09-30 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━┩
+│ Total Revenue        │    $391.04B(+2.0%) │           $383.28B │
+│ Net Income           │     $93.74B(-3.4%) │            $97.00B │
+└──────────────────────┴────────────────────┴────────────────────┘
+
+                         🏛️ Annual Balance Sheet                         
+┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┓
+┃ Metric               ┃         2024-09-30 ┃         2023-09-30 ┃
+┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━┩
+│ Total Assets         │    $364.98B(+3.5%) │           $352.58B │
+│ Total Liabilities    │    $308.03B(+6.1%) │           $290.44B │
+│ Stockholders Equity  │     $56.95B(-8.4%) │            $62.15B │
+│ Shares Outstanding   │     15.117B(-2.8%) │            15.550B │
+└──────────────────────┴────────────────────┴────────────────────┘
 ```
 
 ## Available Information
@@ -102,6 +124,16 @@ For each stock ticker, Stocklyzer provides:
 - **5-Year Growth** - Half-decade price performance
 - **10-Year Growth** - Decade-long investment returns
 - **Color Coding**: Red ▼ for losses, Green ▲ for gains
+
+### 📋 Financial Statements
+- **Annual Income Statement** - Revenue and net income with year-over-year growth rates
+- **Quarterly Income Statement** - Last 4 quarters of revenue and net income performance
+- **Annual Balance Sheet** - Assets, liabilities, equity, and shares outstanding
+- **Quarterly Balance Sheet** - Quarterly balance sheet metrics (when available)
+- **Smart Color Coding**:
+  - 🟢 **Green**: Positive trends (revenue growth, debt reduction, share buybacks)
+  - 🔴 **Red**: Concerning trends (revenue decline, debt increase, share dilution)
+  - **Special Logic**: Liabilities use opposite colors (red for increases, green for decreases)
 
 ### 🏢 Company Info
 - **Company Name** - Full legal entity name
