@@ -1,9 +1,9 @@
 """Pure domain models with no UI concerns."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Dict
 from enum import Enum
 
 
@@ -34,6 +34,73 @@ class GrowthMetrics:
             "10y": self.ten_years
         }
         return period_map.get(period.lower())
+
+
+@dataclass
+class FinancialPeriod:
+    """Single period financial data."""
+    date: datetime
+    total_revenue: Optional[Decimal] = None
+    net_income: Optional[Decimal] = None
+    total_assets: Optional[Decimal] = None
+    total_liabilities: Optional[Decimal] = None
+    total_equity: Optional[Decimal] = None
+    shares_outstanding: Optional[int] = None
+    
+    def __post_init__(self):
+        """Validate and quantize financial values."""
+        # Convert to millions and quantize to 2 decimal places
+        for field_name in ["total_revenue", "net_income", "total_assets", "total_liabilities", "total_equity"]:
+            value = getattr(self, field_name)
+            if value is not None:
+                # Convert to millions if the value is large (assuming input is in actual dollars)
+                if value > 1_000_000:
+                    value = value / 1_000_000
+                setattr(self, field_name, value.quantize(Decimal('0.01')))
+
+
+@dataclass
+class FinancialHistory:
+    """Historical financial data with growth calculations."""
+    annual_periods: List[FinancialPeriod] = field(default_factory=list)
+    quarterly_periods: List[FinancialPeriod] = field(default_factory=list)
+    
+    def get_revenue_growth(self, period_type: str = "annual") -> List[Optional[Decimal]]:
+        """Calculate revenue growth rates."""
+        periods = self.annual_periods if period_type == "annual" else self.quarterly_periods
+        return self._calculate_growth_rates(periods, "total_revenue")
+    
+    def get_net_income_growth(self, period_type: str = "annual") -> List[Optional[Decimal]]:
+        """Calculate net income growth rates."""
+        periods = self.annual_periods if period_type == "annual" else self.quarterly_periods
+        return self._calculate_growth_rates(periods, "net_income")
+    
+    def get_balance_sheet_growth(self) -> Dict[str, List[Optional[Decimal]]]:
+        """Calculate balance sheet growth rates."""
+        return {
+            "assets": self._calculate_growth_rates(self.annual_periods, "total_assets"),
+            "liabilities": self._calculate_growth_rates(self.annual_periods, "total_liabilities"),
+            "equity": self._calculate_growth_rates(self.annual_periods, "total_equity")
+        }
+    
+    def _calculate_growth_rates(self, periods: List[FinancialPeriod], metric: str) -> List[Optional[Decimal]]:
+        """Calculate period-over-period growth rates."""
+        if len(periods) < 2:
+            return []
+        
+        growth_rates = []
+        
+        for i in range(len(periods) - 1):
+            current = getattr(periods[i], metric)      # More recent (index 0 is most recent)
+            previous = getattr(periods[i + 1], metric) # Older period
+            
+            if current is not None and previous is not None and previous != 0:
+                growth = ((current - previous) / previous) * 100
+                growth_rates.append(growth.quantize(Decimal('0.1')))
+            else:
+                growth_rates.append(None)
+        
+        return growth_rates
 
 
 @dataclass
@@ -114,6 +181,7 @@ class StockInfo:
     # Calculated metrics (optional)
     growth_metrics: Optional[GrowthMetrics] = None
     price_range: Optional[PriceRange] = None
+    financial_history: Optional[FinancialHistory] = None
     data_quality_score: float = 1.0
     
     def __post_init__(self):

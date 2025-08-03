@@ -9,6 +9,7 @@ from rich.columns import Columns
 from stocklyzer.services.factory import ServiceFactory
 from stocklyzer.utils.exceptions import ValidationError, StockDataError
 from ..formatters.stock_formatter import StockDisplayFormatter
+from ..formatters.financial_table_formatter import RichFinancialTableFormatter
 
 console = Console()
 
@@ -108,6 +109,35 @@ def display_stock_info(stock_info):
     
     # Display in columns
     console.print(Columns([fundamentals_panel, growth_panel], equal=True, expand=False))
+    
+    # Display financial tables if available
+    if stock_info.financial_history:
+        # Create Rich tables
+        annual_income_table = RichFinancialTableFormatter.create_annual_income_statement_table(stock_info.financial_history)
+        quarterly_income_table = RichFinancialTableFormatter.create_quarterly_income_statement_table(stock_info.financial_history)
+        annual_balance_sheet_table = RichFinancialTableFormatter.create_annual_balance_sheet_table(stock_info.financial_history)
+        quarterly_balance_sheet_table = RichFinancialTableFormatter.create_quarterly_balance_sheet_table(stock_info.financial_history)
+        
+        # Display tables
+        if annual_income_table:
+            console.print()
+            console.print(annual_income_table)
+        
+        if quarterly_income_table:
+            console.print()
+            console.print(quarterly_income_table)
+        
+        if annual_balance_sheet_table:
+            console.print()
+            console.print(annual_balance_sheet_table)
+        
+        if quarterly_balance_sheet_table:
+            console.print()
+            console.print(quarterly_balance_sheet_table)
+        else:
+            console.print()
+            console.print("[dim]Note: Quarterly balance sheet data not available for this stock[/dim]")
+    
     console.print()
 
 
