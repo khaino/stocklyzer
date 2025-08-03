@@ -69,6 +69,8 @@ class MockStockService(StockService):
             eps=Decimal('6.60'),
             book_value=Decimal('4.43'),
             sector="Technology",
+            quote_type="EQUITY",
+            category=None,
             growth_metrics=apple_growth,
             price_range=apple_range,
             last_updated=datetime.now(),
