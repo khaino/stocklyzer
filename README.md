@@ -31,14 +31,11 @@ pip install .[cli]
 Get real-time stock information for any ticker symbol:
 
 ```bash
-# Get Apple stock info
+# Template
+slz ticker <stock_ticker>
+
+# Example with Apple
 slz ticker AAPL
-
-# Get Microsoft stock info  
-slz ticker MSFT
-
-# Get Google stock info
-slz ticker GOOGL
 
 # Show help
 slz --help
@@ -62,7 +59,6 @@ Price: $524.11 ▼ -1.76%    [████████░░] 52-week range
 
 ## Sample Output
 
-### Apple Inc. (AAPL)
 ```
 slz ticker AAPL
 Fetching real stock data for AAPL...
@@ -76,38 +72,6 @@ Price: $202.38 ▼ -2.50%    [███░░░░░░░] 52-week range
   ├─   P/E Ratio     30.66      ├─   2 Years    +6.14% ▲    
   ├─   EPS (TTM)     $6.60      ├─   5 Years    +91.11% ▲   
   └─   Book Value    $4.43      └─   10 Years   +662.93% ▲  
-```
-
-### Microsoft Corporation (MSFT)
-```
-slz ticker MSFT
-Fetching real stock data for MSFT...
-
-MSFT - Microsoft Corporation (Technology)
-
-Price: $524.11 ▼ -1.76%    [████████░░] 52-week range
-
- 📊 Fundamentals               🚀 Growth Performance         
-  ├─   Market Cap    $3.90T     ├─   1 Year     +29.29% ▲    
-  ├─   P/E Ratio     38.45      ├─   2 Years    +62.52% ▲    
-  ├─   EPS (TTM)     $13.63     ├─   5 Years    +152.63% ▲   
-  └─   Book Value    $46.20     └─   10 Years   +1191.28% ▲  
-```
-
-### Alphabet Inc. (GOOGL)
-```
-slz ticker GOOGL
-Fetching real stock data for GOOGL...
-
-GOOGL - Alphabet Inc. (Communication Services)
-
-Price: $189.13 ▼ -1.44%    [███████░░░] 52-week range
-
- 📊 Fundamentals               🚀 Growth Performance        
-  ├─   Market Cap    $2.29T     ├─   1 Year     +14.03% ▲   
-  ├─   P/E Ratio     20.16      ├─   2 Years    +48.20% ▲   
-  ├─   EPS (TTM)     $9.38      ├─   5 Years    +156.64% ▲  
-  └─   Book Value    $29.98     └─   10 Years   +472.46% ▲  
 ```
 
 ## Available Information

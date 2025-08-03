@@ -53,11 +53,18 @@ class TestCLICommands:
 
     def test_ticker_unknown(self):
         """Test ticker command with unknown ticker."""
-        result = self.runner.invoke(app, ["ticker", "UNKNOWN"])
+        result = self.runner.invoke(app, ["ticker", "ZZZZZ"])
         assert result.exit_code == 0
-        assert "UNKNOWN" in result.stdout
+        assert "ZZZZZ" in result.stdout
         # Should show error message for invalid ticker
         assert "Could not fetch data" in result.stdout
+
+    def test_ticker_invalid_symbol(self):
+        """Test ticker command with invalid symbol format."""
+        result = self.runner.invoke(app, ["ticker", "TOOLONG123"])
+        assert result.exit_code == 0
+        assert "Validation Error" in result.stdout
+        assert "Invalid symbol format" in result.stdout
 
     def test_ticker_missing_argument(self):
         """Test ticker command without symbol argument."""
