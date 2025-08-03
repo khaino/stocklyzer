@@ -101,6 +101,32 @@ class YFinanceStockService(StockService):
             # Calculate price range
             price_range = await self._calculate_price_range(hist)
             
+            # Extract dividend information - try different field names
+            dividend_yield = info.get('dividendYield') or info.get('trailingAnnualDividendYield')
+            dividend_rate = info.get('dividendRate') or info.get('trailingAnnualDividendRate')
+            ex_dividend_date = info.get('exDividendDate')
+            dividend_date = info.get('dividendDate')
+            
+
+            
+            # Validate dividend yield is reasonable (Yahoo Finance returns as decimal, so 0.20 = 20%)
+            # But sometimes it returns as percentage already, so check both ranges
+            if dividend_yield is not None:
+                if dividend_yield <= 0:
+                    dividend_yield = None
+                elif dividend_yield > 20:  # If > 20, likely already in percentage format, reject extreme values
+                    logger.warning(f"Extreme dividend yield for {self._symbol}: {dividend_yield}%")
+                    dividend_yield = None
+                elif dividend_yield > 0.20:  # Between 0.20 and 20, assume it's percentage format
+                    dividend_yield = dividend_yield / 100  # Convert to decimal format
+            
+            # Calculate dividend yield manually if we have dividend rate and current price
+            if dividend_yield is None and dividend_rate is not None and current_price > 0:
+                calculated_yield_percent = (dividend_rate / current_price) * 100
+                if 0 < calculated_yield_percent <= 20:  # Reasonable range
+                    dividend_yield = calculated_yield_percent / 100  # Store as decimal (0.0051 for 0.51%)
+                    logger.info(f"Calculated dividend yield for {self._symbol}: {calculated_yield_percent:.2f}%")
+            
             # Build domain model
             stock_info = StockInfo(
                 symbol=self._symbol,
@@ -116,6 +142,10 @@ class YFinanceStockService(StockService):
                 pe_ratio=pe_ratio,
                 eps=Decimal(str(eps)) if eps is not None else None,
                 book_value=Decimal(str(info.get('bookValue'))) if info.get('bookValue') else None,
+                dividend_yield=Decimal(str(dividend_yield * 100)) if dividend_yield is not None and dividend_yield > 0 else None,  # Convert decimal to percentage for storage
+                dividend_rate=Decimal(str(dividend_rate)) if dividend_rate is not None else None,
+                ex_dividend_date=datetime.fromtimestamp(ex_dividend_date) if ex_dividend_date else None,
+                dividend_date=datetime.fromtimestamp(dividend_date) if dividend_date else None,
                 sector=info.get('sector'),
                 quote_type=info.get('quoteType'),
                 category=info.get('category'),
@@ -151,12 +181,14 @@ class YFinanceStockService(StockService):
         try:
             growth_1y = await self._calculator.calculate_growth(self._ticker, "1y")
             growth_2y = await self._calculator.calculate_growth(self._ticker, "2y")
+            growth_3y = await self._calculator.calculate_growth(self._ticker, "3y")
             growth_5y = await self._calculator.calculate_growth(self._ticker, "5y")
             growth_10y = await self._calculator.calculate_growth(self._ticker, "10y")
             
             return GrowthMetrics(
                 one_year=growth_1y,
                 two_years=growth_2y,
+                three_years=growth_3y,
                 five_years=growth_5y,
                 ten_years=growth_10y
             )

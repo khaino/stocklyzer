@@ -11,8 +11,9 @@ A modern command line interface for comprehensive stock analysis
 * 📊 **Real-time stock data** from Yahoo Finance
 * 🎨 **Clean, colorful display** with intuitive red/green coding
 * 📈 **52-week range progress bar** with smart color zones
-* 💰 **Comprehensive metrics** - Price, Fundamentals, and Growth
-* 🚀 **Multi-year growth tracking** - 1, 2, 5, and 10-year performance
+* 💰 **Comprehensive metrics** - Price, Fundamentals, Growth, and Dividends
+* 🚀 **Multi-year growth tracking** - 1, 2, 3, 5, and 10-year performance
+* 💸 **Dividend information** - Yield percentages for income investors
 * 🌈 **Terminal-friendly colors** - works on both dark and light themes
 * ⚡ **Ultra-fast and minimal** - essential information only
 
@@ -70,8 +71,9 @@ Price: $202.38 ▼ -2.50%    [███░░░░░░░] 52-week range
  📊 Fundamentals               🚀 Growth Performance        
   ├─   Market Cap    $3.00T     ├─   1 Year     -7.52% ▼    
   ├─   P/E Ratio     30.66      ├─   2 Years    +6.14% ▲    
-  ├─   EPS (TTM)     $6.60      ├─   5 Years    +91.11% ▲   
-  └─   Book Value    $4.43      └─   10 Years   +662.93% ▲  
+  ├─   EPS (TTM)     $6.60      ├─   3 Years    +28.51% ▲   
+  ├─   Book Value    $4.43      ├─   5 Years    +91.11% ▲   
+  └─   Dividend      0.51%      └─   10 Years   +662.93% ▲  
 ```
 
 ## Available Information
@@ -91,10 +93,12 @@ For each stock ticker, Stocklyzer provides:
 - **P/E Ratio** - Price-to-earnings ratio
 - **EPS (TTM)** - Earnings Per Share (trailing 12 months)
 - **Book Value** - Book value per share
+- **Dividend** - Annual dividend yield percentage
 
 ### 🚀 Growth Performance
 - **1-Year Growth** - Annual price performance
 - **2-Year Growth** - Bi-annual price performance
+- **3-Year Growth** - Three-year price performance
 - **5-Year Growth** - Half-decade price performance
 - **10-Year Growth** - Decade-long investment returns
 - **Color Coding**: Red ▼ for losses, Green ▲ for gains

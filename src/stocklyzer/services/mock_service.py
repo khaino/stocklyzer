@@ -43,6 +43,7 @@ class MockStockService(StockService):
         apple_growth = GrowthMetrics(
             one_year=Decimal('-7.52'),
             two_years=Decimal('6.14'),
+            three_years=Decimal('25.48'),
             five_years=Decimal('91.11'),
             ten_years=Decimal('662.93')
         )
@@ -68,6 +69,10 @@ class MockStockService(StockService):
             pe_ratio=Decimal('30.66'),
             eps=Decimal('6.60'),
             book_value=Decimal('4.43'),
+            dividend_yield=Decimal('0.44'),  # 0.44% dividend yield
+            dividend_rate=Decimal('0.96'),   # $0.96 annual dividend per share
+            ex_dividend_date=datetime(2024, 11, 8),  # Example ex-dividend date
+            dividend_date=datetime(2024, 11, 14),    # Example dividend payment date
             sector="Technology",
             quote_type="EQUITY",
             category=None,

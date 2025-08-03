@@ -42,6 +42,8 @@ class TestCLICommands:
         assert "Price:" in result.stdout
         # Real data includes these fields
         assert ("Market Cap" in result.stdout or "P/E Ratio" in result.stdout)
+        # Check for dividend information
+        assert "Dividend" in result.stdout
 
     def test_ticker_msft(self):
         """Test ticker command with MSFT."""
@@ -50,6 +52,8 @@ class TestCLICommands:
         assert "MSFT" in result.stdout
         assert "Microsoft" in result.stdout
         assert "Price:" in result.stdout
+        # Check for dividend information
+        assert "Dividend" in result.stdout
 
     def test_ticker_unknown(self):
         """Test ticker command with unknown ticker."""
@@ -72,3 +76,17 @@ class TestCLICommands:
         assert result.exit_code == 2  # Typer returns 2 for missing required arguments
         # Error messages in typer go to stderr in the output
         assert "Missing argument" in result.output or "Missing argument" in str(result.exception)
+
+    def test_dividend_functionality(self):
+        """Test that dividend information is displayed correctly."""
+        # Test with a dividend-paying stock
+        result = self.runner.invoke(app, ["ticker", "KO"])
+        assert result.exit_code == 0
+        assert "Dividend" in result.stdout
+        # Should show dividend yield percentage
+        assert "%" in result.stdout or "No Dividend" in result.stdout
+        
+        # Test with a non-dividend stock
+        result = self.runner.invoke(app, ["ticker", "TSLA"])
+        assert result.exit_code == 0
+        assert "Dividend" in result.stdout

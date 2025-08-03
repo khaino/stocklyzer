@@ -13,12 +13,13 @@ class GrowthMetrics:
     
     one_year: Optional[Decimal] = None
     two_years: Optional[Decimal] = None
+    three_years: Optional[Decimal] = None
     five_years: Optional[Decimal] = None
     ten_years: Optional[Decimal] = None
     
     def __post_init__(self):
         """Validate and quantize growth percentages."""
-        for field_name in ["one_year", "two_years", "five_years", "ten_years"]:
+        for field_name in ["one_year", "two_years", "three_years", "five_years", "ten_years"]:
             value = getattr(self, field_name)
             if value is not None:
                 setattr(self, field_name, value.quantize(Decimal('0.01')))
@@ -28,6 +29,7 @@ class GrowthMetrics:
         period_map = {
             "1y": self.one_year,
             "2y": self.two_years,
+            "3y": self.three_years,
             "5y": self.five_years,
             "10y": self.ten_years
         }
@@ -98,6 +100,12 @@ class StockInfo:
     eps: Optional[Decimal] = None
     book_value: Optional[Decimal] = None
     
+    # Dividend information (optional)
+    dividend_yield: Optional[Decimal] = None  # Annual dividend yield as percentage
+    dividend_rate: Optional[Decimal] = None   # Annual dividend per share in dollars
+    ex_dividend_date: Optional[datetime] = None  # Most recent ex-dividend date
+    dividend_date: Optional[datetime] = None     # Most recent dividend payment date
+    
     # Company information (optional)
     sector: Optional[str] = None
     quote_type: Optional[str] = None  # "ETF", "EQUITY", "MUTUALFUND", etc.
@@ -119,6 +127,12 @@ class StockInfo:
         self.current_price = self.current_price.quantize(Decimal('0.01'))
         self.change = self.change.quantize(Decimal('0.01'))
         self.change_percent = self.change_percent.quantize(Decimal('0.01'))
+        
+        # Quantize dividend fields if present
+        if self.dividend_yield is not None:
+            self.dividend_yield = self.dividend_yield.quantize(Decimal('0.01'))
+        if self.dividend_rate is not None:
+            self.dividend_rate = self.dividend_rate.quantize(Decimal('0.01'))
     
     @property
     def is_profitable(self) -> Optional[bool]:
@@ -134,6 +148,12 @@ class StockInfo:
     def is_price_decreasing(self) -> bool:
         """Check if price is decreasing."""
         return self.change < 0
+    
+    @property
+    def pays_dividend(self) -> bool:
+        """Check if the stock pays dividends."""
+        return (self.dividend_rate is not None and self.dividend_rate > 0) or \
+               (self.dividend_yield is not None and self.dividend_yield > 0)
     
     @property
     def market_cap_category(self) -> str:

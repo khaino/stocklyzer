@@ -112,3 +112,5 @@ ENV/
 .ruff_cache/
 
 .cursorindexingignore
+
+keys.txt
