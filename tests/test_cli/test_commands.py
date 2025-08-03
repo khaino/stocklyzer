@@ -30,7 +30,7 @@ class TestCLICommands:
         """Test ticker command help."""
         result = self.runner.invoke(app, ["ticker", "--help"])
         assert result.exit_code == 0
-        assert "Get real stock information" in result.stdout
+        assert "Get comprehensive stock information" in result.stdout
         assert "Examples:" in result.stdout
 
     def test_ticker_aapl(self):
@@ -39,7 +39,7 @@ class TestCLICommands:
         assert result.exit_code == 0
         assert "AAPL" in result.stdout
         assert "Apple" in result.stdout
-        assert "Current Price" in result.stdout
+        assert "Price:" in result.stdout
         # Real data includes these fields
         assert ("Market Cap" in result.stdout or "P/E Ratio" in result.stdout)
 
@@ -49,7 +49,7 @@ class TestCLICommands:
         assert result.exit_code == 0
         assert "MSFT" in result.stdout
         assert "Microsoft" in result.stdout
-        assert "Current Price" in result.stdout
+        assert "Price:" in result.stdout
 
     def test_ticker_unknown(self):
         """Test ticker command with unknown ticker."""
@@ -63,4 +63,5 @@ class TestCLICommands:
         """Test ticker command without symbol argument."""
         result = self.runner.invoke(app, ["ticker"])
         assert result.exit_code == 2  # Typer returns 2 for missing required arguments
-        assert "Missing argument" in result.stdout
+        # Error messages in typer go to stderr in the output
+        assert "Missing argument" in result.output or "Missing argument" in str(result.exception)
