@@ -63,4 +63,5 @@ class TestCLICommands:
         """Test ticker command without symbol argument."""
         result = self.runner.invoke(app, ["ticker"])
         assert result.exit_code == 2  # Typer returns 2 for missing required arguments
-        assert "Missing argument" in result.stdout
+        # Error messages in typer go to stderr in the output
+        assert "Missing argument" in result.output or "Missing argument" in str(result.exception)
