@@ -94,6 +94,28 @@ class StockDisplayFormatter:
             return f"${eps:.2f}"
     
     @staticmethod
+    def format_dividend_yield(dividend_yield: Optional[Decimal]) -> str:
+        """Format dividend yield for display."""
+        if dividend_yield is None:
+            return "[dim]No Dividend[/dim]"
+        
+        if dividend_yield > 0:
+            return f"[cyan]{dividend_yield:.2f}%[/cyan]"
+        else:
+            return "[dim]0.00%[/dim]"
+    
+    @staticmethod
+    def format_dividend_rate(dividend_rate: Optional[Decimal]) -> str:
+        """Format dividend rate for display."""
+        if dividend_rate is None:
+            return "[dim]No Dividend[/dim]"
+        
+        if dividend_rate > 0:
+            return f"[cyan]${dividend_rate:.2f}[/cyan]"
+        else:
+            return "[dim]$0.00[/dim]"
+    
+    @staticmethod
     def format_fundamentals_data(stock_info: StockInfo) -> List[Tuple[str, str]]:
         """Format fundamentals data for display."""
         formatter = StockDisplayFormatter()
@@ -118,6 +140,9 @@ class StockDisplayFormatter:
         else:
             fundamentals.append(("Book Value", "[dim]No Data[/dim]"))
         
+        # Dividend
+        fundamentals.append(("Dividend", formatter.format_dividend_yield(stock_info.dividend_yield)))
+        
         return fundamentals
     
     @staticmethod
@@ -129,6 +154,7 @@ class StockDisplayFormatter:
             return [
                 ("1 Year", "[dim]No Data[/dim]"),
                 ("2 Years", "[dim]No Data[/dim]"),
+                ("3 Years", "[dim]No Data[/dim]"),
                 ("5 Years", "[dim]No Data[/dim]"),
                 ("10 Years", "[dim]No Data[/dim]")
             ]
@@ -136,6 +162,7 @@ class StockDisplayFormatter:
         return [
             ("1 Year", formatter.format_growth_value(growth_metrics.one_year)),
             ("2 Years", formatter.format_growth_value(growth_metrics.two_years)),
+            ("3 Years", formatter.format_growth_value(growth_metrics.three_years)),
             ("5 Years", formatter.format_growth_value(growth_metrics.five_years)),
             ("10 Years", formatter.format_growth_value(growth_metrics.ten_years))
         ]

@@ -1,13 +1,14 @@
 """YFinance-based stock service implementation."""
 
 import yfinance as yf
+import pandas as pd
 import logging
 from decimal import Decimal
 from datetime import datetime
 from typing import Optional
 
 from .interfaces import StockService
-from ..domain.models import StockInfo, GrowthMetrics, PriceRange
+from ..domain.models import StockInfo, GrowthMetrics, PriceRange, FinancialHistory, FinancialPeriod
 from ..utils.calculations import GrowthCalculator
 from ..utils.validators import SymbolValidator
 from ..utils.exceptions import StockDataError, ValidationError
@@ -101,6 +102,35 @@ class YFinanceStockService(StockService):
             # Calculate price range
             price_range = await self._calculate_price_range(hist)
             
+            # Calculate financial history
+            financial_history = await self._calculate_financial_history()
+            
+            # Extract dividend information - try different field names
+            dividend_yield = info.get('dividendYield') or info.get('trailingAnnualDividendYield')
+            dividend_rate = info.get('dividendRate') or info.get('trailingAnnualDividendRate')
+            ex_dividend_date = info.get('exDividendDate')
+            dividend_date = info.get('dividendDate')
+            
+
+            
+            # Validate dividend yield is reasonable (Yahoo Finance returns as decimal, so 0.20 = 20%)
+            # But sometimes it returns as percentage already, so check both ranges
+            if dividend_yield is not None:
+                if dividend_yield <= 0:
+                    dividend_yield = None
+                elif dividend_yield > 20:  # If > 20, likely already in percentage format, reject extreme values
+                    logger.warning(f"Extreme dividend yield for {self._symbol}: {dividend_yield}%")
+                    dividend_yield = None
+                elif dividend_yield > 0.20:  # Between 0.20 and 20, assume it's percentage format
+                    dividend_yield = dividend_yield / 100  # Convert to decimal format
+            
+            # Calculate dividend yield manually if we have dividend rate and current price
+            if dividend_yield is None and dividend_rate is not None and current_price > 0:
+                calculated_yield_percent = (dividend_rate / current_price) * 100
+                if 0 < calculated_yield_percent <= 20:  # Reasonable range
+                    dividend_yield = calculated_yield_percent / 100  # Store as decimal (0.0051 for 0.51%)
+                    logger.info(f"Calculated dividend yield for {self._symbol}: {calculated_yield_percent:.2f}%")
+            
             # Build domain model
             stock_info = StockInfo(
                 symbol=self._symbol,
@@ -116,11 +146,16 @@ class YFinanceStockService(StockService):
                 pe_ratio=pe_ratio,
                 eps=Decimal(str(eps)) if eps is not None else None,
                 book_value=Decimal(str(info.get('bookValue'))) if info.get('bookValue') else None,
+                dividend_yield=Decimal(str(dividend_yield * 100)) if dividend_yield is not None and dividend_yield > 0 else None,  # Convert decimal to percentage for storage
+                dividend_rate=Decimal(str(dividend_rate)) if dividend_rate is not None else None,
+                ex_dividend_date=datetime.fromtimestamp(ex_dividend_date) if ex_dividend_date else None,
+                dividend_date=datetime.fromtimestamp(dividend_date) if dividend_date else None,
                 sector=info.get('sector'),
                 quote_type=info.get('quoteType'),
                 category=info.get('category'),
                 growth_metrics=growth_metrics,
                 price_range=price_range,
+                financial_history=financial_history,
                 last_updated=datetime.now(),
                 data_quality_score=self._calculate_data_quality_score(info, growth_metrics)
             )
@@ -151,12 +186,14 @@ class YFinanceStockService(StockService):
         try:
             growth_1y = await self._calculator.calculate_growth(self._ticker, "1y")
             growth_2y = await self._calculator.calculate_growth(self._ticker, "2y")
+            growth_3y = await self._calculator.calculate_growth(self._ticker, "3y")
             growth_5y = await self._calculator.calculate_growth(self._ticker, "5y")
             growth_10y = await self._calculator.calculate_growth(self._ticker, "10y")
             
             return GrowthMetrics(
                 one_year=growth_1y,
                 two_years=growth_2y,
+                three_years=growth_3y,
                 five_years=growth_5y,
                 ten_years=growth_10y
             )
@@ -185,6 +222,122 @@ class YFinanceStockService(StockService):
             )
         except Exception as e:
             logger.warning(f"Failed to calculate price range: {e}")
+            return None
+    
+    async def _calculate_financial_history(self) -> Optional[FinancialHistory]:
+        """Calculate financial history from Yahoo Finance data."""
+        try:
+            # Get financial statements
+            annual_financials = self._ticker.financials
+            quarterly_financials = self._ticker.quarterly_financials
+            annual_balance_sheet = self._ticker.balance_sheet
+            quarterly_balance_sheet = self._ticker.quarterly_balance_sheet
+            
+            financial_history = FinancialHistory()
+            
+            # Process annual data
+            if not annual_financials.empty and not annual_balance_sheet.empty:
+                annual_periods = []
+                
+                # Get up to 4 years of data
+                for date in annual_financials.columns[:4]:
+                    try:
+                        # Income statement data
+                        total_revenue = annual_financials.loc['Total Revenue', date] if 'Total Revenue' in annual_financials.index else None
+                        net_income = annual_financials.loc['Net Income', date] if 'Net Income' in annual_financials.index else None
+                        
+                        # Balance sheet data - using correct Yahoo Finance field names with fallbacks
+                        total_assets = None
+                        if 'Total Assets' in annual_balance_sheet.index:
+                            total_assets = annual_balance_sheet.loc['Total Assets', date]
+                        
+                        total_liab = None
+                        if 'Total Liabilities Net Minority Interest' in annual_balance_sheet.index:
+                            total_liab = annual_balance_sheet.loc['Total Liabilities Net Minority Interest', date]
+                        elif 'Total Liab' in annual_balance_sheet.index:
+                            total_liab = annual_balance_sheet.loc['Total Liab', date]
+                        
+                        total_equity = None
+                        if 'Stockholders Equity' in annual_balance_sheet.index:
+                            total_equity = annual_balance_sheet.loc['Stockholders Equity', date]
+                        elif 'Total Stockholder Equity' in annual_balance_sheet.index:
+                            total_equity = annual_balance_sheet.loc['Total Stockholder Equity', date]
+                        shares_outstanding = annual_balance_sheet.loc['Share Issued', date] if 'Share Issued' in annual_balance_sheet.index else None
+                        
+                        period = FinancialPeriod(
+                            date=date.to_pydatetime(),
+                            total_revenue=Decimal(str(total_revenue)) if total_revenue is not None and not pd.isna(total_revenue) else None,
+                            net_income=Decimal(str(net_income)) if net_income is not None and not pd.isna(net_income) else None,
+                            total_assets=Decimal(str(total_assets)) if total_assets is not None and not pd.isna(total_assets) else None,
+                            total_liabilities=Decimal(str(total_liab)) if total_liab is not None and not pd.isna(total_liab) else None,
+                            total_equity=Decimal(str(total_equity)) if total_equity is not None and not pd.isna(total_equity) else None,
+                            shares_outstanding=int(shares_outstanding) if shares_outstanding is not None and not pd.isna(shares_outstanding) else None
+                        )
+                        annual_periods.append(period)
+                        
+                    except (KeyError, ValueError, TypeError) as e:
+                        logger.debug(f"Error processing annual data for {date}: {e}")
+                        continue
+                
+                financial_history.annual_periods = annual_periods
+            
+            # Process quarterly data
+            if not quarterly_financials.empty:
+                quarterly_periods = []
+                
+                # Get up to 4 quarters of data
+                for date in quarterly_financials.columns[:4]:
+                    try:
+                        # Income statement data
+                        total_revenue = quarterly_financials.loc['Total Revenue', date] if 'Total Revenue' in quarterly_financials.index else None
+                        net_income = quarterly_financials.loc['Net Income', date] if 'Net Income' in quarterly_financials.index else None
+                        
+                        # Balance sheet data (if available for this quarter)
+                        total_assets = None
+                        total_liab = None
+                        total_equity = None
+                        shares_outstanding = None
+                        
+                        if not quarterly_balance_sheet.empty and date in quarterly_balance_sheet.columns:
+                            if 'Total Assets' in quarterly_balance_sheet.index:
+                                total_assets = quarterly_balance_sheet.loc['Total Assets', date]
+                            
+                            if 'Total Liabilities Net Minority Interest' in quarterly_balance_sheet.index:
+                                total_liab = quarterly_balance_sheet.loc['Total Liabilities Net Minority Interest', date]
+                            elif 'Total Liab' in quarterly_balance_sheet.index:
+                                total_liab = quarterly_balance_sheet.loc['Total Liab', date]
+                            
+                            if 'Stockholders Equity' in quarterly_balance_sheet.index:
+                                total_equity = quarterly_balance_sheet.loc['Stockholders Equity', date]
+                            elif 'Total Stockholder Equity' in quarterly_balance_sheet.index:
+                                total_equity = quarterly_balance_sheet.loc['Total Stockholder Equity', date]
+                            
+                            if 'Ordinary Shares Number' in quarterly_balance_sheet.index:
+                                shares_outstanding = quarterly_balance_sheet.loc['Ordinary Shares Number', date]
+                            elif 'Share Issued' in quarterly_balance_sheet.index:
+                                shares_outstanding = quarterly_balance_sheet.loc['Share Issued', date]
+                        
+                        period = FinancialPeriod(
+                            date=date.to_pydatetime(),
+                            total_revenue=Decimal(str(total_revenue)) if total_revenue is not None and not pd.isna(total_revenue) else None,
+                            net_income=Decimal(str(net_income)) if net_income is not None and not pd.isna(net_income) else None,
+                            total_assets=Decimal(str(total_assets)) if total_assets is not None and not pd.isna(total_assets) else None,
+                            total_liabilities=Decimal(str(total_liab)) if total_liab is not None and not pd.isna(total_liab) else None,
+                            total_equity=Decimal(str(total_equity)) if total_equity is not None and not pd.isna(total_equity) else None,
+                            shares_outstanding=int(shares_outstanding) if shares_outstanding is not None and not pd.isna(shares_outstanding) else None
+                        )
+                        quarterly_periods.append(period)
+                        
+                    except (KeyError, ValueError, TypeError) as e:
+                        logger.debug(f"Error processing quarterly data for {date}: {e}")
+                        continue
+                
+                financial_history.quarterly_periods = quarterly_periods
+            
+            return financial_history if (financial_history.annual_periods or financial_history.quarterly_periods) else None
+            
+        except Exception as e:
+            logger.warning(f"Failed to calculate financial history for {self._symbol}: {e}")
             return None
     
     def _calculate_data_quality_score(self, info: dict, growth_metrics: Optional[GrowthMetrics]) -> float:
