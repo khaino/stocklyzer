@@ -101,7 +101,7 @@ def display_stock_info(ticker: str, stock_data: dict):
     if stock_data.get('eps') is not None:
         eps_value = stock_data['eps']
         if eps_value < 0:
-            fundamentals_data.append(("EPS (TTM)", f"[red]${eps_value:.2f}[/red]"))
+            fundamentals_data.append(("EPS (TTM)", f"[red]-${abs(eps_value):.2f}[/red]"))
         else:
             fundamentals_data.append(("EPS (TTM)", f"${eps_value:.2f}"))
     else:
@@ -232,11 +232,37 @@ def get_stock_data(ticker: str) -> dict:
 
         # Get historical data for growth calculations
         def calculate_growth(start_period, end_period="1d"):
-            """Calculate growth between two periods."""
+            """Calculate growth between two periods, checking for sufficient data."""
             try:
                 hist_start = stock.history(period=start_period)
                 hist_end = stock.history(period=end_period)
                 if not hist_start.empty and not hist_end.empty:
+                    # Check if we have enough data for the requested period
+                    from datetime import datetime, timedelta
+                    
+                    # Get the actual start date of our data
+                    actual_start_date = hist_start.index[0]
+                    current_date = datetime.now().replace(tzinfo=actual_start_date.tz)
+                    
+                    # Calculate required lookback period
+                    if start_period == "5y":
+                        required_years = 5
+                    elif start_period == "10y":
+                        required_years = 10
+                    elif start_period == "2y":
+                        required_years = 2
+                    elif start_period == "1y":
+                        required_years = 1
+                    else:
+                        required_years = 1
+                    
+                    # Check if we have at least 80% of the required time period
+                    required_date = current_date - timedelta(days=required_years * 365 * 0.8)
+                    
+                    if actual_start_date > required_date:
+                        # Not enough historical data
+                        return None
+                    
                     start_price = float(hist_start.iloc[0]['Close'])
                     end_price = float(hist_end.iloc[-1]['Close'])
                     return ((end_price - start_price) / start_price) * 100
