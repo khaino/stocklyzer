@@ -19,7 +19,7 @@ A command line interface for stock analysis
 Clone from GitHub and install locally:
 
 ```bash
-git clone https://github.com/yourusername/stocklyzer.git
+git clone https://github.com/khaino/stocklyzer.git
 cd stocklyzer
 pip install .[cli]
 ```
