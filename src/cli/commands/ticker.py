@@ -91,21 +91,34 @@ def display_stock_info(ticker: str, stock_data: dict):
             cap_str = f"${market_cap/1e6:.2f}M"
         fundamentals_data.append(("Market Cap", cap_str))
     
-    if stock_data.get('pe_ratio'):
+    # P/E Ratio - show "No Data" if not available or negative earnings
+    if stock_data.get('pe_ratio') and stock_data.get('eps', 0) > 0:
         fundamentals_data.append(("P/E Ratio", f"{stock_data['pe_ratio']:.2f}"))
+    else:
+        fundamentals_data.append(("P/E Ratio", "[dim]No Data[/dim]"))
     
-    if stock_data.get('eps'):
-        fundamentals_data.append(("EPS (TTM)", f"${stock_data['eps']:.2f}"))
+    # EPS - always show if available, otherwise "No Data"
+    if stock_data.get('eps') is not None:
+        eps_value = stock_data['eps']
+        if eps_value < 0:
+            fundamentals_data.append(("EPS (TTM)", f"[red]${eps_value:.2f}[/red]"))
+        else:
+            fundamentals_data.append(("EPS (TTM)", f"${eps_value:.2f}"))
+    else:
+        fundamentals_data.append(("EPS (TTM)", "[dim]No Data[/dim]"))
     
+    # Book Value - show "No Data" if not available
     if stock_data.get('book_value'):
         fundamentals_data.append(("Book Value", f"${stock_data['book_value']:.2f}"))
+    else:
+        fundamentals_data.append(("Book Value", "[dim]No Data[/dim]"))
     
     # Prepare growth data with consistent formatting
     growth_data = []
     
     def format_growth_value(growth_value):
         if growth_value is None:
-            return "[dim]N/A[/dim]"
+            return "[dim]No Data[/dim]"
         
         # Simple red/green color coding
         if growth_value < 0:
@@ -117,10 +130,29 @@ def display_stock_info(ticker: str, stock_data: dict):
         
         return f"[{color}]{growth_value:+.2f}% {arrow}[/{color}]"
     
-    growth_data.append(("1 Year", format_growth_value(stock_data.get('growth_1y'))))
-    growth_data.append(("2 Years", format_growth_value(stock_data.get('growth_2y'))))
-    growth_data.append(("5 Years", format_growth_value(stock_data.get('growth_5y'))))
-    growth_data.append(("10 Years", format_growth_value(stock_data.get('growth_10y'))))
+    # Add growth data with better handling for limited history
+    growth_1y = stock_data.get('growth_1y')
+    growth_2y = stock_data.get('growth_2y')
+    growth_5y = stock_data.get('growth_5y')
+    growth_10y = stock_data.get('growth_10y')
+    
+    # Detect if 5Y and 10Y data are the same (indicates limited history)
+    if growth_5y is not None and growth_10y is not None and abs(growth_5y - growth_10y) < 0.01:
+        # Company likely has less than 5 years of history
+        growth_5y = None
+        growth_10y = None
+    
+    # Similar check for 2Y data
+    if growth_2y is not None and growth_5y is not None and abs(growth_2y - growth_5y) < 0.01:
+        # Company likely has less than 2 years of history
+        growth_2y = None
+        growth_5y = None
+        growth_10y = None
+    
+    growth_data.append(("1 Year", format_growth_value(growth_1y)))
+    growth_data.append(("2 Years", format_growth_value(growth_2y)))
+    growth_data.append(("5 Years", format_growth_value(growth_5y)))
+    growth_data.append(("10 Years", format_growth_value(growth_10y)))
     
     # Create two separate tables for proper alignment
     from rich.table import Table
