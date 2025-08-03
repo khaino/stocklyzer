@@ -100,6 +100,8 @@ class StockInfo:
     
     # Company information (optional)
     sector: Optional[str] = None
+    quote_type: Optional[str] = None  # "ETF", "EQUITY", "MUTUALFUND", etc.
+    category: Optional[str] = None    # Fund category for ETFs
     
     # Calculated metrics (optional)
     growth_metrics: Optional[GrowthMetrics] = None
@@ -149,6 +151,21 @@ class StockInfo:
             return "small_cap"
         else:
             return "micro_cap"
+    
+    def get_display_classification(self) -> str:
+        """Get appropriate classification for display."""
+        if self.quote_type == 'ETF' and self.category:
+            return self.category  # e.g., "Large Blend", "Small Growth"
+        elif self.quote_type == 'MUTUALFUND':
+            return "Mutual Fund"
+        elif self.quote_type == 'CRYPTOCURRENCY':
+            return "Cryptocurrency"
+        elif self.quote_type == 'CURRENCY':
+            return "Currency"
+        elif self.sector:
+            return self.sector  # For regular stocks
+        else:
+            return "Unknown"
 
 
 class MarketCapSize(Enum):

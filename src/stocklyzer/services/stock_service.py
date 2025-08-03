@@ -117,6 +117,8 @@ class YFinanceStockService(StockService):
                 eps=Decimal(str(eps)) if eps is not None else None,
                 book_value=Decimal(str(info.get('bookValue'))) if info.get('bookValue') else None,
                 sector=info.get('sector'),
+                quote_type=info.get('quoteType'),
+                category=info.get('category'),
                 growth_metrics=growth_metrics,
                 price_range=price_range,
                 last_updated=datetime.now(),

@@ -79,7 +79,7 @@ def display_stock_info(stock_info):
     # Header
     console.print(f"\n[bold cyan]{stock_info.symbol}[/bold cyan] - "
                  f"[cyan]{stock_info.company_name}[/cyan] "
-                 f"([yellow]{stock_info.sector or 'Unknown'}[/yellow])")
+                 f"([yellow]{stock_info.get_display_classification()}[/yellow])")
     
     # Price line
     console.print(f"\n[bold green]Price:[/bold green] "
