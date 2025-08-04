@@ -110,6 +110,10 @@ def display_stock_info(stock_info):
     # Display in columns
     console.print(Columns([fundamentals_panel, growth_panel], equal=True, expand=False))
     
+    # Check for potential data quality issues and warn user
+    if stock_info.financial_history and stock_info.market_cap:
+        _check_and_warn_data_quality(stock_info, console)
+    
     # Display financial tables if available
     if stock_info.financial_history:
         # Create Rich tables
@@ -153,6 +157,43 @@ def display_stock_info(stock_info):
             console.print("[dim]Note: Quarterly cash flow data not available for this stock[/dim]")
     
     console.print()
+
+
+def _check_and_warn_data_quality(stock_info, console):
+    """Check for potential data quality issues and warn the user."""
+    if not stock_info.market_cap or stock_info.market_cap <= 0:
+        return
+    
+    market_cap_millions = stock_info.market_cap / 1_000_000
+    warnings = []
+    
+    # Check annual periods for suspicious data
+    for period in stock_info.financial_history.annual_periods[:2]:  # Check most recent 2 years
+        if period.total_revenue:
+            revenue_millions = abs(float(period.total_revenue))
+            if revenue_millions > market_cap_millions * 100:  # Revenue > 100x market cap
+                warnings.append(f"Annual revenue (${revenue_millions:.0f}M) seems unusually high vs market cap (${market_cap_millions:.0f}M)")
+        
+        if period.total_assets:
+            assets_millions = abs(float(period.total_assets))
+            if assets_millions > market_cap_millions * 500:  # Assets > 500x market cap
+                warnings.append(f"Annual assets (${assets_millions:.0f}M) seem unusually high vs market cap (${market_cap_millions:.0f}M)")
+    
+    # Check quarterly periods for suspicious data
+    for period in stock_info.financial_history.quarterly_periods[:2]:  # Check most recent 2 quarters
+        if period.total_revenue:
+            revenue_millions = abs(float(period.total_revenue))
+            if revenue_millions > market_cap_millions * 50:  # Quarterly revenue > 50x market cap
+                warnings.append(f"Quarterly revenue (${revenue_millions:.0f}M) seems unusually high vs market cap (${market_cap_millions:.0f}M)")
+    
+    # Display warnings if any found
+    if warnings:
+        console.print()
+        console.print("⚠️  [yellow bold]Data Quality Warning[/yellow bold]")
+        console.print("[yellow]The following financial data may be inaccurate (Yahoo Finance data quality issue):[/yellow]")
+        for warning in warnings[:3]:  # Limit to 3 warnings to avoid spam
+            console.print(f"[yellow]• {warning}[/yellow]")
+        console.print("[dim]Please verify financial data from official company reports.[/dim]")
 
 
 def _create_data_table(data_list):
