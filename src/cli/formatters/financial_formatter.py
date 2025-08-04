@@ -26,9 +26,11 @@ class FinancialTableFormatter:
         # Add growth rate if available
         if growth is not None:
             if growth >= 0:
-                return f"[green]{currency_str}(+{growth:.1f}%)[/green]"
+                growth_str = FinancialTableFormatter._format_percentage(growth)
+                return f"[green]{currency_str}(+{growth_str})[/green]"
             else:
-                return f"[red]{currency_str}({growth:.1f}%)[/red]"
+                growth_str = FinancialTableFormatter._format_percentage(growth)
+                return f"[red]{currency_str}({growth_str})[/red]"
         else:
             # Base period without growth calculation
             return currency_str
@@ -45,12 +47,25 @@ class FinancialTableFormatter:
         # Add growth rate if available (without color coding)
         if growth is not None:
             if growth >= 0:
-                return f"{currency_str}(+{growth:.1f}%)"
+                growth_str = FinancialTableFormatter._format_percentage(growth)
+                return f"{currency_str}(+{growth_str})"
             else:
-                return f"{currency_str}({growth:.1f}%)"
+                growth_str = FinancialTableFormatter._format_percentage(growth)
+                return f"{currency_str}({growth_str})"
         else:
             # Base period without growth calculation
             return currency_str
+    
+    @staticmethod
+    def _format_percentage(growth: Decimal) -> str:
+        """Format percentage, using 'k' for values over 999%."""
+        abs_growth = abs(growth)
+        if abs_growth > 999:
+            # Use 'k' for thousands when percentage is over 999%
+            k_value = abs_growth / 1000
+            return f"{k_value:.1f}k%"
+        else:
+            return f"{growth:.1f}%"
     
     @staticmethod
     def _format_currency(amount: Decimal) -> str:
@@ -83,10 +98,12 @@ class FinancialTableFormatter:
         if growth is not None:
             if growth >= 0:
                 # Positive growth (dilution) is bad = red
-                return f"[red]{shares_str}(+{growth:.1f}%)[/red]"
+                growth_str = FinancialTableFormatter._format_percentage(growth)
+                return f"[red]{shares_str}(+{growth_str})[/red]"
             else:
                 # Negative growth (buybacks) is good = green  
-                return f"[green]{shares_str}({growth:.1f}%)[/green]"
+                growth_str = FinancialTableFormatter._format_percentage(growth)
+                return f"[green]{shares_str}({growth_str})[/green]"
         else:
             # Base period without growth calculation
             return shares_str
