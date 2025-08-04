@@ -438,6 +438,37 @@ class YFinanceStockService(StockService):
             logger.warning(f"Failed to calculate financial history for {self._symbol}: {e}")
             return None
     
+    def _validate_financial_period_data(self, market_cap: Optional[int], revenue: Optional[float], 
+                                       assets: Optional[float], operating_cf: Optional[float]) -> bool:
+        """Validate financial period data for reasonableness against market cap."""
+        if not market_cap or market_cap <= 0:
+            return True  # Can't validate without market cap, allow through
+        
+        # Convert market cap to millions for comparison
+        market_cap_millions = market_cap / 1_000_000
+        
+        # Check for unreasonable ratios (financial values much larger than market cap)
+        # This helps catch data corruption like micro-cap companies showing billion-dollar revenues
+        max_reasonable_ratio = 1000  # Allow financial metrics up to 1000x market cap
+        
+        values_to_check = [
+            ("revenue", revenue),
+            ("assets", assets), 
+            ("operating_cash_flow", operating_cf)
+        ]
+        
+        for name, value in values_to_check:
+            if value is not None and not pd.isna(value):
+                # Convert to millions for comparison
+                value_millions = abs(value) / 1_000_000
+                ratio = value_millions / market_cap_millions
+                
+                if ratio > max_reasonable_ratio:
+                    logger.warning(f"Suspicious {name} data for {self._symbol}: ${value_millions:.0f}M vs market cap ${market_cap_millions:.0f}M (ratio: {ratio:.1f}x)")
+                    return False
+        
+        return True
+    
     def _calculate_data_quality_score(self, info: dict, growth_metrics: Optional[GrowthMetrics]) -> float:
         """Calculate data quality score based on available information."""
         score = 0.0
