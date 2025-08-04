@@ -53,8 +53,8 @@ class FinancialPeriod:
         for field_name in ["total_revenue", "net_income", "total_assets", "total_liabilities", "total_equity"]:
             value = getattr(self, field_name)
             if value is not None:
-                # Convert to millions if the value is large (assuming input is in actual dollars)
-                if value > 1_000_000:
+                # Convert to millions if the absolute value is large (assuming input is in actual dollars)
+                if abs(value) > 1_000_000:
                     value = value / 1_000_000
                 setattr(self, field_name, value.quantize(Decimal('0.01')))
 
@@ -84,7 +84,7 @@ class FinancialHistory:
         }
     
     def _calculate_growth_rates(self, periods: List[FinancialPeriod], metric: str) -> List[Optional[Decimal]]:
-        """Calculate period-over-period growth rates."""
+        """Calculate period-over-period growth rates with proper handling for negative base values."""
         if len(periods) < 2:
             return []
         
@@ -95,7 +95,8 @@ class FinancialHistory:
             previous = getattr(periods[i + 1], metric) # Older period
             
             if current is not None and previous is not None and previous != 0:
-                growth = ((current - previous) / previous) * 100
+                # Use absolute value of denominator for meaningful percentage when base is negative
+                growth = ((current - previous) / abs(previous)) * 100
                 growth_rates.append(growth.quantize(Decimal('0.1')))
             else:
                 growth_rates.append(None)

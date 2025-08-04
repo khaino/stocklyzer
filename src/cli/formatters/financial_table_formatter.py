@@ -242,11 +242,18 @@ class RichFinancialTableFormatter:
         if amount is None:
             return "[dim]N/A[/dim]"
         
-        # Format the currency amount
-        if amount >= 1_000:
-            currency_str = f"${amount/1_000:,.2f}B"
+        # Format the currency amount with proper negative sign placement
+        abs_amount = abs(amount)
+        if abs_amount >= 1_000:
+            if amount < 0:
+                currency_str = f"-${abs_amount/1_000:,.2f}B"
+            else:
+                currency_str = f"${abs_amount/1_000:,.2f}B"
         else:
-            currency_str = f"${amount:,.0f}M"
+            if amount < 0:
+                currency_str = f"-${abs_amount:,.0f}M"
+            else:
+                currency_str = f"${abs_amount:,.0f}M"
         
         # Add growth rate if available
         if growth is not None:
@@ -258,7 +265,7 @@ class RichFinancialTableFormatter:
             else:
                 return f"[red]{currency_str}({growth:.1f}%)[/red]"
         else:
-            # Base period without growth calculation
+            # Base period without growth calculation, or growth not meaningful
             return currency_str
     
     @staticmethod
@@ -302,7 +309,7 @@ class RichFinancialTableFormatter:
     
     @staticmethod
     def _calculate_growth_rates(periods: List, metric: str) -> List[Optional[Decimal]]:
-        """Calculate period-over-period growth rates for any metric."""
+        """Calculate period-over-period growth rates for any metric with proper handling for negative base values."""
         if len(periods) < 2:
             return []
         
@@ -311,7 +318,8 @@ class RichFinancialTableFormatter:
             current = getattr(periods[i], metric)
             previous = getattr(periods[i + 1], metric)
             if current is not None and previous is not None and previous != 0:
-                growth = ((current - previous) / previous) * 100
+                # Use absolute value of denominator for meaningful percentage when base is negative
+                growth = ((current - previous) / abs(previous)) * 100
                 growth_rates.append(Decimal(str(growth)).quantize(Decimal('0.1')))
             else:
                 growth_rates.append(None)
@@ -323,11 +331,18 @@ class RichFinancialTableFormatter:
         if amount is None:
             return "[dim]N/A[/dim]"
         
-        # Format the currency amount
-        if amount >= 1_000:
-            currency_str = f"${amount/1_000:,.2f}B"
+        # Format the currency amount with proper negative sign placement
+        abs_amount = abs(amount)
+        if abs_amount >= 1_000:
+            if amount < 0:
+                currency_str = f"-${abs_amount/1_000:,.2f}B"
+            else:
+                currency_str = f"${abs_amount/1_000:,.2f}B"
         else:
-            currency_str = f"${amount:,.0f}M"
+            if amount < 0:
+                currency_str = f"-${abs_amount:,.0f}M"
+            else:
+                currency_str = f"${abs_amount:,.0f}M"
         
         # Add growth rate if available (OPPOSITE colors for liabilities)
         if growth is not None:
@@ -341,5 +356,5 @@ class RichFinancialTableFormatter:
                 # Negative growth in liabilities is good = green
                 return f"[green]{currency_str}({growth:.1f}%)[/green]"
         else:
-            # Base period without growth calculation
+            # Base period without growth calculation, or growth not meaningful
             return currency_str

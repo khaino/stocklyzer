@@ -35,11 +35,18 @@ class FinancialTableFormatter:
     
     @staticmethod
     def _format_currency(amount: Decimal) -> str:
-        """Format currency in millions/billions."""
-        if amount >= 1_000:
-            return f"${amount/1_000:,.0f}B"
+        """Format currency in millions/billions with proper negative sign placement."""
+        abs_amount = abs(amount)
+        if abs_amount >= 1_000:
+            if amount < 0:
+                return f"-${abs_amount/1_000:,.0f}B"
+            else:
+                return f"${abs_amount/1_000:,.0f}B"
         else:
-            return f"${amount:,.0f}M"
+            if amount < 0:
+                return f"-${abs_amount:,.0f}M"
+            else:
+                return f"${abs_amount:,.0f}M"
     
     @staticmethod
     def format_date(date) -> str:
