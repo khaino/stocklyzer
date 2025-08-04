@@ -232,6 +232,8 @@ class YFinanceStockService(StockService):
             quarterly_financials = self._ticker.quarterly_financials
             annual_balance_sheet = self._ticker.balance_sheet
             quarterly_balance_sheet = self._ticker.quarterly_balance_sheet
+            annual_cash_flow = self._ticker.cashflow
+            quarterly_cash_flow = self._ticker.quarterly_cashflow
             
             financial_history = FinancialHistory()
             
@@ -264,6 +266,49 @@ class YFinanceStockService(StockService):
                             total_equity = annual_balance_sheet.loc['Total Stockholder Equity', date]
                         shares_outstanding = annual_balance_sheet.loc['Share Issued', date] if 'Share Issued' in annual_balance_sheet.index else None
                         
+                        # Cash flow data (if available for this date)
+                        operating_cash_flow = None
+                        investing_cash_flow = None
+                        financing_cash_flow = None
+                        changes_in_cash = None
+                        free_cash_flow = None
+                        
+                        if not annual_cash_flow.empty and date in annual_cash_flow.columns:
+                            # Common yfinance cash flow field names with fallbacks
+                            if 'Operating Cash Flow' in annual_cash_flow.index:
+                                operating_cash_flow = annual_cash_flow.loc['Operating Cash Flow', date]
+                            elif 'Total Cash From Operating Activities' in annual_cash_flow.index:
+                                operating_cash_flow = annual_cash_flow.loc['Total Cash From Operating Activities', date]
+                            
+                            if 'Investing Cash Flow' in annual_cash_flow.index:
+                                investing_cash_flow = annual_cash_flow.loc['Investing Cash Flow', date]
+                            elif 'Total Cash From Investing Activities' in annual_cash_flow.index:
+                                investing_cash_flow = annual_cash_flow.loc['Total Cash From Investing Activities', date]
+                            
+                            if 'Financing Cash Flow' in annual_cash_flow.index:
+                                financing_cash_flow = annual_cash_flow.loc['Financing Cash Flow', date]
+                            elif 'Total Cash From Financing Activities' in annual_cash_flow.index:
+                                financing_cash_flow = annual_cash_flow.loc['Total Cash From Financing Activities', date]
+                            
+                            if 'Changes In Cash' in annual_cash_flow.index:
+                                changes_in_cash = annual_cash_flow.loc['Changes In Cash', date]
+                            elif 'Net Change In Cash' in annual_cash_flow.index:
+                                changes_in_cash = annual_cash_flow.loc['Net Change In Cash', date]
+                            
+                            if 'Free Cash Flow' in annual_cash_flow.index:
+                                free_cash_flow = annual_cash_flow.loc['Free Cash Flow', date]
+                            elif operating_cash_flow is not None:
+                                # Calculate free cash flow if not directly available
+                                capex = None
+                                if 'Capital Expenditures' in annual_cash_flow.index:
+                                    capex = annual_cash_flow.loc['Capital Expenditures', date]
+                                elif 'Capital Expenditure' in annual_cash_flow.index:
+                                    capex = annual_cash_flow.loc['Capital Expenditure', date]
+                                
+                                if capex is not None:
+                                    # CapEx is usually negative in yfinance, so we add it (subtract the absolute value)
+                                    free_cash_flow = operating_cash_flow + capex
+                        
                         period = FinancialPeriod(
                             date=date.to_pydatetime(),
                             total_revenue=Decimal(str(total_revenue)) if total_revenue is not None and not pd.isna(total_revenue) else None,
@@ -271,7 +316,12 @@ class YFinanceStockService(StockService):
                             total_assets=Decimal(str(total_assets)) if total_assets is not None and not pd.isna(total_assets) else None,
                             total_liabilities=Decimal(str(total_liab)) if total_liab is not None and not pd.isna(total_liab) else None,
                             total_equity=Decimal(str(total_equity)) if total_equity is not None and not pd.isna(total_equity) else None,
-                            shares_outstanding=int(shares_outstanding) if shares_outstanding is not None and not pd.isna(shares_outstanding) else None
+                            shares_outstanding=int(shares_outstanding) if shares_outstanding is not None and not pd.isna(shares_outstanding) else None,
+                            operating_cash_flow=Decimal(str(operating_cash_flow)) if operating_cash_flow is not None and not pd.isna(operating_cash_flow) else None,
+                            investing_cash_flow=Decimal(str(investing_cash_flow)) if investing_cash_flow is not None and not pd.isna(investing_cash_flow) else None,
+                            financing_cash_flow=Decimal(str(financing_cash_flow)) if financing_cash_flow is not None and not pd.isna(financing_cash_flow) else None,
+                            changes_in_cash=Decimal(str(changes_in_cash)) if changes_in_cash is not None and not pd.isna(changes_in_cash) else None,
+                            free_cash_flow=Decimal(str(free_cash_flow)) if free_cash_flow is not None and not pd.isna(free_cash_flow) else None
                         )
                         annual_periods.append(period)
                         
@@ -317,6 +367,49 @@ class YFinanceStockService(StockService):
                             elif 'Share Issued' in quarterly_balance_sheet.index:
                                 shares_outstanding = quarterly_balance_sheet.loc['Share Issued', date]
                         
+                        # Cash flow data (if available for this quarter)
+                        operating_cash_flow = None
+                        investing_cash_flow = None
+                        financing_cash_flow = None
+                        changes_in_cash = None
+                        free_cash_flow = None
+                        
+                        if not quarterly_cash_flow.empty and date in quarterly_cash_flow.columns:
+                            # Common yfinance cash flow field names with fallbacks
+                            if 'Operating Cash Flow' in quarterly_cash_flow.index:
+                                operating_cash_flow = quarterly_cash_flow.loc['Operating Cash Flow', date]
+                            elif 'Total Cash From Operating Activities' in quarterly_cash_flow.index:
+                                operating_cash_flow = quarterly_cash_flow.loc['Total Cash From Operating Activities', date]
+                            
+                            if 'Investing Cash Flow' in quarterly_cash_flow.index:
+                                investing_cash_flow = quarterly_cash_flow.loc['Investing Cash Flow', date]
+                            elif 'Total Cash From Investing Activities' in quarterly_cash_flow.index:
+                                investing_cash_flow = quarterly_cash_flow.loc['Total Cash From Investing Activities', date]
+                            
+                            if 'Financing Cash Flow' in quarterly_cash_flow.index:
+                                financing_cash_flow = quarterly_cash_flow.loc['Financing Cash Flow', date]
+                            elif 'Total Cash From Financing Activities' in quarterly_cash_flow.index:
+                                financing_cash_flow = quarterly_cash_flow.loc['Total Cash From Financing Activities', date]
+                            
+                            if 'Changes In Cash' in quarterly_cash_flow.index:
+                                changes_in_cash = quarterly_cash_flow.loc['Changes In Cash', date]
+                            elif 'Net Change In Cash' in quarterly_cash_flow.index:
+                                changes_in_cash = quarterly_cash_flow.loc['Net Change In Cash', date]
+                            
+                            if 'Free Cash Flow' in quarterly_cash_flow.index:
+                                free_cash_flow = quarterly_cash_flow.loc['Free Cash Flow', date]
+                            elif operating_cash_flow is not None:
+                                # Calculate free cash flow if not directly available
+                                capex = None
+                                if 'Capital Expenditures' in quarterly_cash_flow.index:
+                                    capex = quarterly_cash_flow.loc['Capital Expenditures', date]
+                                elif 'Capital Expenditure' in quarterly_cash_flow.index:
+                                    capex = quarterly_cash_flow.loc['Capital Expenditure', date]
+                                
+                                if capex is not None:
+                                    # CapEx is usually negative in yfinance, so we add it (subtract the absolute value)
+                                    free_cash_flow = operating_cash_flow + capex
+                        
                         period = FinancialPeriod(
                             date=date.to_pydatetime(),
                             total_revenue=Decimal(str(total_revenue)) if total_revenue is not None and not pd.isna(total_revenue) else None,
@@ -324,7 +417,12 @@ class YFinanceStockService(StockService):
                             total_assets=Decimal(str(total_assets)) if total_assets is not None and not pd.isna(total_assets) else None,
                             total_liabilities=Decimal(str(total_liab)) if total_liab is not None and not pd.isna(total_liab) else None,
                             total_equity=Decimal(str(total_equity)) if total_equity is not None and not pd.isna(total_equity) else None,
-                            shares_outstanding=int(shares_outstanding) if shares_outstanding is not None and not pd.isna(shares_outstanding) else None
+                            shares_outstanding=int(shares_outstanding) if shares_outstanding is not None and not pd.isna(shares_outstanding) else None,
+                            operating_cash_flow=Decimal(str(operating_cash_flow)) if operating_cash_flow is not None and not pd.isna(operating_cash_flow) else None,
+                            investing_cash_flow=Decimal(str(investing_cash_flow)) if investing_cash_flow is not None and not pd.isna(investing_cash_flow) else None,
+                            financing_cash_flow=Decimal(str(financing_cash_flow)) if financing_cash_flow is not None and not pd.isna(financing_cash_flow) else None,
+                            changes_in_cash=Decimal(str(changes_in_cash)) if changes_in_cash is not None and not pd.isna(changes_in_cash) else None,
+                            free_cash_flow=Decimal(str(free_cash_flow)) if free_cash_flow is not None and not pd.isna(free_cash_flow) else None
                         )
                         quarterly_periods.append(period)
                         

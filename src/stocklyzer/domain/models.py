@@ -47,10 +47,18 @@ class FinancialPeriod:
     total_equity: Optional[Decimal] = None
     shares_outstanding: Optional[int] = None
     
+    # Cash flow statement data
+    operating_cash_flow: Optional[Decimal] = None
+    investing_cash_flow: Optional[Decimal] = None
+    financing_cash_flow: Optional[Decimal] = None
+    changes_in_cash: Optional[Decimal] = None
+    free_cash_flow: Optional[Decimal] = None
+    
     def __post_init__(self):
         """Validate and quantize financial values."""
         # Convert to millions and quantize to 2 decimal places
-        for field_name in ["total_revenue", "net_income", "total_assets", "total_liabilities", "total_equity"]:
+        for field_name in ["total_revenue", "net_income", "total_assets", "total_liabilities", "total_equity",
+                          "operating_cash_flow", "investing_cash_flow", "financing_cash_flow", "changes_in_cash", "free_cash_flow"]:
             value = getattr(self, field_name)
             if value is not None:
                 # Convert to millions if the absolute value is large (assuming input is in actual dollars)
@@ -82,6 +90,27 @@ class FinancialHistory:
             "liabilities": self._calculate_growth_rates(self.annual_periods, "total_liabilities"),
             "equity": self._calculate_growth_rates(self.annual_periods, "total_equity")
         }
+    
+    def get_cash_flow_growth(self, period_type: str = "annual") -> Dict[str, List[Optional[Decimal]]]:
+        """Calculate cash flow growth rates."""
+        periods = self.annual_periods if period_type == "annual" else self.quarterly_periods
+        return {
+            "operating_cash_flow": self._calculate_growth_rates(periods, "operating_cash_flow"),
+            "investing_cash_flow": self._calculate_growth_rates(periods, "investing_cash_flow"),
+            "financing_cash_flow": self._calculate_growth_rates(periods, "financing_cash_flow"),
+            "changes_in_cash": self._calculate_growth_rates(periods, "changes_in_cash"),
+            "free_cash_flow": self._calculate_growth_rates(periods, "free_cash_flow")
+        }
+    
+    def get_operating_cash_flow_growth(self, period_type: str = "annual") -> List[Optional[Decimal]]:
+        """Calculate operating cash flow growth rates."""
+        periods = self.annual_periods if period_type == "annual" else self.quarterly_periods
+        return self._calculate_growth_rates(periods, "operating_cash_flow")
+    
+    def get_free_cash_flow_growth(self, period_type: str = "annual") -> List[Optional[Decimal]]:
+        """Calculate free cash flow growth rates."""
+        periods = self.annual_periods if period_type == "annual" else self.quarterly_periods
+        return self._calculate_growth_rates(periods, "free_cash_flow")
     
     def _calculate_growth_rates(self, periods: List[FinancialPeriod], metric: str) -> List[Optional[Decimal]]:
         """Calculate period-over-period growth rates with proper handling for negative base values."""
