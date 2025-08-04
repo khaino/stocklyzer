@@ -237,6 +237,145 @@ class RichFinancialTableFormatter:
         return table
     
     @staticmethod
+    def create_annual_cash_flow_table(financial_history: FinancialHistory) -> Table:
+        """Create a Rich table for annual cash flow statement."""
+        if not financial_history.annual_periods:
+            return None
+        
+        periods = financial_history.annual_periods[:4]  # Show last 4 years
+        cash_flow_growth = financial_history.get_cash_flow_growth("annual")
+        
+        # Create table
+        table = Table(title="💰 Annual Cash Flow Statement", show_header=True, header_style="bold cyan")
+        
+        # Add columns
+        table.add_column("Metric", style="cyan", no_wrap=True, width=20)
+        for period in periods:
+            table.add_column(period.date.strftime("%Y-%m-%d"), justify="right", width=18)
+        
+        # Add operating cash flow row
+        operating_row = ["Operating Cash Flow"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["operating_cash_flow"][i] if i < len(cash_flow_growth["operating_cash_flow"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_growth(
+                period.operating_cash_flow, growth
+            )
+            operating_row.append(formatted)
+        table.add_row(*operating_row)
+        
+        # Add investing cash flow row (neutral coloring)
+        investing_row = ["Investing Cash Flow"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["investing_cash_flow"][i] if i < len(cash_flow_growth["investing_cash_flow"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_neutral_growth(
+                period.investing_cash_flow, growth
+            )
+            investing_row.append(formatted)
+        table.add_row(*investing_row)
+        
+        # Add financing cash flow row (neutral coloring)
+        financing_row = ["Financing Cash Flow"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["financing_cash_flow"][i] if i < len(cash_flow_growth["financing_cash_flow"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_neutral_growth(
+                period.financing_cash_flow, growth
+            )
+            financing_row.append(formatted)
+        table.add_row(*financing_row)
+        
+        # Add changes in cash row
+        changes_row = ["Changes in Cash"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["changes_in_cash"][i] if i < len(cash_flow_growth["changes_in_cash"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_growth(
+                period.changes_in_cash, growth
+            )
+            changes_row.append(formatted)
+        table.add_row(*changes_row)
+        
+        # Add free cash flow row
+        free_cf_row = ["Free Cash Flow"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["free_cash_flow"][i] if i < len(cash_flow_growth["free_cash_flow"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_growth(
+                period.free_cash_flow, growth
+            )
+            free_cf_row.append(formatted)
+        table.add_row(*free_cf_row)
+        
+        return table
+    
+    @staticmethod
+    def create_quarterly_cash_flow_table(financial_history: FinancialHistory) -> Table:
+        """Create a Rich table for quarterly cash flow statement."""
+        if not financial_history.quarterly_periods:
+            return None
+        
+        periods = financial_history.quarterly_periods[:4]  # Show last 4 quarters
+        cash_flow_growth = financial_history.get_cash_flow_growth("quarterly")
+        
+        # Create table
+        table = Table(title="💰 Quarterly Cash Flow Statement", show_header=True, header_style="bold cyan")
+        
+        # Add columns
+        table.add_column("Metric", style="cyan", no_wrap=True, width=20)
+        for period in periods:
+            quarter = f"{period.date.year}-Q{(period.date.month-1)//3 + 1}"
+            table.add_column(quarter, justify="right", width=18)
+        
+        # Add operating cash flow row
+        operating_row = ["Operating Cash Flow"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["operating_cash_flow"][i] if i < len(cash_flow_growth["operating_cash_flow"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_growth(
+                period.operating_cash_flow, growth
+            )
+            operating_row.append(formatted)
+        table.add_row(*operating_row)
+        
+        # Add investing cash flow row (neutral coloring)
+        investing_row = ["Investing Cash Flow"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["investing_cash_flow"][i] if i < len(cash_flow_growth["investing_cash_flow"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_neutral_growth(
+                period.investing_cash_flow, growth
+            )
+            investing_row.append(formatted)
+        table.add_row(*investing_row)
+        
+        # Add financing cash flow row (neutral coloring)
+        financing_row = ["Financing Cash Flow"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["financing_cash_flow"][i] if i < len(cash_flow_growth["financing_cash_flow"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_neutral_growth(
+                period.financing_cash_flow, growth
+            )
+            financing_row.append(formatted)
+        table.add_row(*financing_row)
+        
+        # Add changes in cash row
+        changes_row = ["Changes in Cash"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["changes_in_cash"][i] if i < len(cash_flow_growth["changes_in_cash"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_growth(
+                period.changes_in_cash, growth
+            )
+            changes_row.append(formatted)
+        table.add_row(*changes_row)
+        
+        # Add free cash flow row
+        free_cf_row = ["Free Cash Flow"]
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["free_cash_flow"][i] if i < len(cash_flow_growth["free_cash_flow"]) else None
+            formatted = RichFinancialTableFormatter._format_currency_with_growth(
+                period.free_cash_flow, growth
+            )
+            free_cf_row.append(formatted)
+        table.add_row(*free_cf_row)
+        
+        return table
+    
+    @staticmethod
     def _format_currency_with_growth(amount: Optional[Decimal], growth: Optional[Decimal]) -> str:
         """Format currency with growth rate and color coding."""
         if amount is None:
@@ -264,6 +403,38 @@ class RichFinancialTableFormatter:
                 return f"[green]{currency_str}(+{growth:.1f}%)[/green]"
             else:
                 return f"[red]{currency_str}({growth:.1f}%)[/red]"
+        else:
+            # Base period without growth calculation, or growth not meaningful
+            return currency_str
+    
+    @staticmethod
+    def _format_currency_with_neutral_growth(amount: Optional[Decimal], growth: Optional[Decimal]) -> str:
+        """Format currency with growth rate but no color coding."""
+        if amount is None:
+            return "[dim]N/A[/dim]"
+        
+        # Format the currency amount with proper negative sign placement
+        abs_amount = abs(amount)
+        if abs_amount >= 1_000:
+            if amount < 0:
+                currency_str = f"-${abs_amount/1_000:,.2f}B"
+            else:
+                currency_str = f"${abs_amount/1_000:,.2f}B"
+        else:
+            if amount < 0:
+                currency_str = f"-${abs_amount:,.0f}M"
+            else:
+                currency_str = f"${abs_amount:,.0f}M"
+        
+        # Add growth rate if available (without color coding)
+        if growth is not None:
+            # Handle the special case of -0.0 which should be treated as 0.0
+            if growth == 0:
+                return f"{currency_str}(0.0%)"
+            elif growth > 0:
+                return f"{currency_str}(+{growth:.1f}%)"
+            else:
+                return f"{currency_str}({growth:.1f}%)"
         else:
             # Base period without growth calculation, or growth not meaningful
             return currency_str

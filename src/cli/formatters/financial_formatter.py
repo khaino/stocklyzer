@@ -34,6 +34,25 @@ class FinancialTableFormatter:
             return currency_str
     
     @staticmethod
+    def format_currency_with_neutral_growth(amount: Optional[Decimal], growth: Optional[Decimal]) -> str:
+        """Format currency with growth rate but no color coding."""
+        if amount is None:
+            return "[dim]N/A[/dim]"
+        
+        # Format the currency amount
+        currency_str = FinancialTableFormatter._format_currency(amount)
+        
+        # Add growth rate if available (without color coding)
+        if growth is not None:
+            if growth >= 0:
+                return f"{currency_str}(+{growth:.1f}%)"
+            else:
+                return f"{currency_str}({growth:.1f}%)"
+        else:
+            # Base period without growth calculation
+            return currency_str
+    
+    @staticmethod
     def _format_currency(amount: Decimal) -> str:
         """Format currency in millions/billions with proper negative sign placement."""
         abs_amount = abs(amount)
@@ -235,6 +254,147 @@ class FinancialTableFormatter:
                 formatted = "N/A"
             shares_line += f"{formatted:>18}   "
         header += shares_line.rstrip()
+        
+        return header
+    
+    @staticmethod
+    def format_annual_cash_flow_statement(financial_history: FinancialHistory) -> str:
+        """Format annual cash flow statement table."""
+        if not financial_history.annual_periods:
+            return "[dim]No annual cash flow data available[/dim]"
+        
+        periods = financial_history.annual_periods[:4]  # Show last 4 years
+        cash_flow_growth = financial_history.get_cash_flow_growth("annual")
+        
+        # Build table header
+        header = "\n═══════════════════ 💰 Annual Cash Flow Statement ═══════════════════\n"
+        
+        # Date headers
+        date_line = "                     "
+        for period in periods:
+            date_line += f"{FinancialTableFormatter.format_date(period.date):>18}   "
+        header += date_line.rstrip() + "\n"
+        
+        # Operating Cash Flow row
+        operating_line = "Operating Cash Flow  "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["operating_cash_flow"][i] if i < len(cash_flow_growth["operating_cash_flow"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_growth(
+                period.operating_cash_flow, growth
+            )
+            operating_line += f"{formatted:>18}   "
+        header += operating_line.rstrip() + "\n"
+        
+        # Investing Cash Flow row (neutral coloring)
+        investing_line = "Investing Cash Flow  "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["investing_cash_flow"][i] if i < len(cash_flow_growth["investing_cash_flow"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_neutral_growth(
+                period.investing_cash_flow, growth
+            )
+            investing_line += f"{formatted:>18}   "
+        header += investing_line.rstrip() + "\n"
+        
+        # Financing Cash Flow row (neutral coloring)
+        financing_line = "Financing Cash Flow  "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["financing_cash_flow"][i] if i < len(cash_flow_growth["financing_cash_flow"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_neutral_growth(
+                period.financing_cash_flow, growth
+            )
+            financing_line += f"{formatted:>18}   "
+        header += financing_line.rstrip() + "\n"
+        
+        # Changes in Cash row
+        changes_line = "Changes in Cash      "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["changes_in_cash"][i] if i < len(cash_flow_growth["changes_in_cash"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_growth(
+                period.changes_in_cash, growth
+            )
+            changes_line += f"{formatted:>18}   "
+        header += changes_line.rstrip() + "\n"
+        
+        # Free Cash Flow row
+        free_cf_line = "Free Cash Flow       "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["free_cash_flow"][i] if i < len(cash_flow_growth["free_cash_flow"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_growth(
+                period.free_cash_flow, growth
+            )
+            free_cf_line += f"{formatted:>18}   "
+        header += free_cf_line.rstrip()
+        
+        return header
+    
+    @staticmethod
+    def format_quarterly_cash_flow_statement(financial_history: FinancialHistory) -> str:
+        """Format quarterly cash flow statement table."""
+        if not financial_history.quarterly_periods:
+            return "[dim]No quarterly cash flow data available[/dim]"
+        
+        periods = financial_history.quarterly_periods[:4]  # Show last 4 quarters
+        cash_flow_growth = financial_history.get_cash_flow_growth("quarterly")
+        
+        # Build table header
+        header = "\n═══════════════════ 💰 Quarterly Cash Flow Statement ═══════════════\n"
+        
+        # Quarter headers (simplified format)
+        date_line = "                     "
+        for period in periods:
+            quarter = f"{period.date.year}-Q{(period.date.month-1)//3 + 1}"
+            date_line += f"{quarter:>18}   "
+        header += date_line.rstrip() + "\n"
+        
+        # Operating Cash Flow row
+        operating_line = "Operating Cash Flow  "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["operating_cash_flow"][i] if i < len(cash_flow_growth["operating_cash_flow"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_growth(
+                period.operating_cash_flow, growth
+            )
+            operating_line += f"{formatted:>18}   "
+        header += operating_line.rstrip() + "\n"
+        
+        # Investing Cash Flow row (neutral coloring)
+        investing_line = "Investing Cash Flow  "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["investing_cash_flow"][i] if i < len(cash_flow_growth["investing_cash_flow"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_neutral_growth(
+                period.investing_cash_flow, growth
+            )
+            investing_line += f"{formatted:>18}   "
+        header += investing_line.rstrip() + "\n"
+        
+        # Financing Cash Flow row (neutral coloring)
+        financing_line = "Financing Cash Flow  "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["financing_cash_flow"][i] if i < len(cash_flow_growth["financing_cash_flow"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_neutral_growth(
+                period.financing_cash_flow, growth
+            )
+            financing_line += f"{formatted:>18}   "
+        header += financing_line.rstrip() + "\n"
+        
+        # Changes in Cash row
+        changes_line = "Changes in Cash      "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["changes_in_cash"][i] if i < len(cash_flow_growth["changes_in_cash"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_growth(
+                period.changes_in_cash, growth
+            )
+            changes_line += f"{formatted:>18}   "
+        header += changes_line.rstrip() + "\n"
+        
+        # Free Cash Flow row
+        free_cf_line = "Free Cash Flow       "
+        for i, period in enumerate(periods):
+            growth = cash_flow_growth["free_cash_flow"][i] if i < len(cash_flow_growth["free_cash_flow"]) else None
+            formatted = FinancialTableFormatter.format_currency_with_growth(
+                period.free_cash_flow, growth
+            )
+            free_cf_line += f"{formatted:>18}   "
+        header += free_cf_line.rstrip()
         
         return header
     

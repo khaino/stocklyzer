@@ -117,6 +117,8 @@ def display_stock_info(stock_info):
         quarterly_income_table = RichFinancialTableFormatter.create_quarterly_income_statement_table(stock_info.financial_history)
         annual_balance_sheet_table = RichFinancialTableFormatter.create_annual_balance_sheet_table(stock_info.financial_history)
         quarterly_balance_sheet_table = RichFinancialTableFormatter.create_quarterly_balance_sheet_table(stock_info.financial_history)
+        annual_cash_flow_table = RichFinancialTableFormatter.create_annual_cash_flow_table(stock_info.financial_history)
+        quarterly_cash_flow_table = RichFinancialTableFormatter.create_quarterly_cash_flow_table(stock_info.financial_history)
         
         # Display tables
         if annual_income_table:
@@ -137,6 +139,18 @@ def display_stock_info(stock_info):
         else:
             console.print()
             console.print("[dim]Note: Quarterly balance sheet data not available for this stock[/dim]")
+        
+        # Display cash flow tables
+        if annual_cash_flow_table:
+            console.print()
+            console.print(annual_cash_flow_table)
+        
+        if quarterly_cash_flow_table:
+            console.print()
+            console.print(quarterly_cash_flow_table)
+        else:
+            console.print()
+            console.print("[dim]Note: Quarterly cash flow data not available for this stock[/dim]")
     
     console.print()
 
