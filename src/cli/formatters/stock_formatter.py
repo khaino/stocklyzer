@@ -77,10 +77,15 @@ class StockDisplayFormatter:
         if growth is None:
             return "[dim]No Data[/dim]"
         
-        if growth < 0:
-            return f"[red]{growth:+.2f}% ▼[/red]"
-        else:
-            return f"[green]{growth:+.2f}% ▲[/green]"
+        try:
+            # Check if the decimal is valid for comparison
+            if growth < 0:
+                return f"[red]{growth:+.2f}% ▼[/red]"
+            else:
+                return f"[green]{growth:+.2f}% ▲[/green]"
+        except Exception:
+            # Handle invalid decimal operations
+            return "[dim]Invalid Data[/dim]"
     
     @staticmethod
     def format_eps_value(eps: Optional[Decimal]) -> str:
