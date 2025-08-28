@@ -11,9 +11,10 @@ A modern command line interface for comprehensive stock analysis
 * 📊 **Real-time stock data** from Yahoo Finance
 * 🎨 **Clean, colorful display** with intuitive red/green coding
 * 📈 **52-week range progress bar** with smart color zones
-* 💰 **Comprehensive metrics** - Price, Fundamentals, Growth, and Dividends
+* 💰 **Comprehensive metrics** - Price, Fundamentals, Growth, Dividends, and Profit Margins
 * 🚀 **Multi-year growth tracking** - 1, 2, 3, 5, and 10-year performance
 * 💸 **Dividend information** - Yield percentages for income investors
+* 💰 **Profit margin analysis** - Latest margin from Yahoo Finance + 1, 2, and 4-year averages
 * 📋 **Financial statements** - Annual and quarterly income statements with growth rates
 * 🏛️ **Balance sheet analysis** - Assets, liabilities, equity, and shares outstanding
 * 💰 **Cash flow analysis** - Operating, investing, financing, and free cash flow with growth rates
@@ -71,14 +72,14 @@ Fetching real stock data for AAPL...
 
 AAPL - Apple Inc. (Technology)
 
-Price: $202.38 ▼ -2.50%    [███░░░░░░░] 52-week range
+Price: $230.49 ▲ +0.51%    [██████░░░░] 52-week range
 
- 📊 Fundamentals               🚀 Growth Performance        
-  ├─   Market Cap    $3.00T     ├─   1 Year     -7.52% ▼    
-  ├─   P/E Ratio     30.66      ├─   2 Years    +6.14% ▲    
-  ├─   EPS (TTM)     $6.60      ├─   3 Years    +28.51% ▲   
-  ├─   Book Value    $4.43      ├─   5 Years    +91.11% ▲   
-  └─   Dividend      0.51%      └─   10 Years   +662.93% ▲  
+ 📊 Fundamentals               🚀 Growth Performance              💰 Profit Margins
+  ├─   Market Cap    $3.42T     ├─   1 Year        +2.24% ▲       ├─   Latest        24.3%
+  ├─   P/E Ratio     35.03      ├─   2 Years       +29.17% ▲      ├─   1-Year Avg    24.0%
+  ├─   EPS (TTM)     $6.58      ├─   3 Years       +45.08% ▲      ├─   2-Year Avg    24.6%
+  ├─   Book Value    $4.43      ├─   5 Years       +89.86% ▲      └─   4-Year Avg    25.1%
+  └─   Dividend      0.45%      └─   10 Years      +805.33% ▲  
 
                                        📈 Annual Financial Statement
 
@@ -122,8 +123,14 @@ For each stock ticker, Stocklyzer provides:
 - **Daily Change** - Price change with red/green color coding
 - **52-Week Range Progress Bar** - Visual position in annual range
   - 🔴 **Red**: Bottom 30% (bearish zone)
-  - 🟡 **Yellow**: Middle 40% (neutral zone)  
+  - 🟡 **Yellow**: Middle 40% (neutral zone)
   - 🟢 **Green**: Top 30% (bullish zone)
+
+### 📊 Overview Layout
+Stocklyzer displays information in a clean three-panel layout:
+- **📊 Fundamentals Panel** - Market cap, P/E ratio, EPS, book value, and dividend yield
+- **🚀 Growth Performance Panel** - 1, 2, 3, 5, and 10-year price performance
+- **💰 Profit Margins Panel** - Latest margin and historical averages
 
 ### 📊 Fundamentals
 - **Market Cap** - Total market capitalization
@@ -139,6 +146,18 @@ For each stock ticker, Stocklyzer provides:
 - **5-Year Growth** - Half-decade price performance
 - **10-Year Growth** - Decade-long investment returns
 - **Color Coding**: Red ▼ for losses, Green ▲ for gains
+
+### 💰 Profit Margins
+- **Latest Margin** - Current profit margin from Yahoo Finance (TTM)
+- **1-Year Average** - Average profit margin over the last year
+- **2-Year Average** - Average profit margin over the last 2 years
+- **4-Year Average** - Average profit margin over the last 4 years
+- **Color Coding**:
+  - 🟢 **Green**: Excellent profitability (>20%)
+  - 🟡 **Cyan**: Good profitability (10-20%)
+  - 🟡 **Yellow**: Moderate profitability (0-10%)
+  - 🔴 **Red**: Poor profitability (<0%)
+- **Data Source**: Latest margin uses Yahoo Finance API, averages calculated from historical financial statements
 
 ### 📋 Financial Statements
 - **Annual Income Statement** - Revenue and net income with year-over-year growth rates

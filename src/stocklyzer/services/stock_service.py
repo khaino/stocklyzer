@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Optional
 
 from .interfaces import StockService
-from ..domain.models import StockInfo, GrowthMetrics, PriceRange, FinancialHistory, FinancialPeriod
+from ..domain.models import StockInfo, GrowthMetrics, PriceRange, FinancialHistory, FinancialPeriod, ProfitMarginMetrics
 from ..utils.calculations import GrowthCalculator
 from ..utils.validators import SymbolValidator
 from ..utils.exceptions import StockDataError, ValidationError
@@ -105,6 +105,9 @@ class YFinanceStockService(StockService):
             # Calculate financial history
             financial_history = await self._calculate_financial_history()
             
+            # Calculate profit margin metrics
+            profit_margin_metrics = await self._calculate_profit_margin_metrics(financial_history)
+            
             # Extract dividend information - try different field names
             dividend_yield = info.get('dividendYield') or info.get('trailingAnnualDividendYield')
             dividend_rate = info.get('dividendRate') or info.get('trailingAnnualDividendRate')
@@ -156,6 +159,7 @@ class YFinanceStockService(StockService):
                 growth_metrics=growth_metrics,
                 price_range=price_range,
                 financial_history=financial_history,
+                profit_margin_metrics=profit_margin_metrics,
                 last_updated=datetime.now(),
                 data_quality_score=self._calculate_data_quality_score(info, growth_metrics)
             )
@@ -512,3 +516,29 @@ class YFinanceStockService(StockService):
     def symbol(self) -> str:
         """Get the symbol this service is initialized for."""
         return self._symbol
+    
+    async def _calculate_profit_margin_metrics(self, financial_history: Optional[FinancialHistory]) -> Optional[ProfitMarginMetrics]:
+        """Calculate profit margin metrics from financial history and ticker info."""
+        try:
+            # Get latest profit margin from ticker.info first (more reliable)
+            latest_margin = self._ticker.info.get('profitMargins', None)
+            if latest_margin:
+                latest_margin = Decimal(str(latest_margin * 100)).quantize(Decimal('0.1'))
+            elif financial_history and financial_history.annual_periods:
+                latest_margin = financial_history.annual_periods[0].profit_margin
+
+            # Calculate averages from historical data
+            one_year_avg = financial_history.get_average_profit_margins(1)
+            two_years_avg = financial_history.get_average_profit_margins(2)
+            four_years_avg = financial_history.get_average_profit_margins(4)
+
+            return ProfitMarginMetrics(
+                latest=latest_margin,
+                one_year_avg=one_year_avg,
+                two_years_avg=two_years_avg,
+                four_years_avg=four_years_avg
+            )
+
+        except Exception as e:
+            logger.error(f"Error calculating profit margin metrics for {self._symbol}: {e}")
+            return None

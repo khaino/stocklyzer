@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, Dict
 
 from .interfaces import StockService
-from ..domain.models import StockInfo, GrowthMetrics, PriceRange, FinancialHistory, FinancialPeriod
+from ..domain.models import StockInfo, GrowthMetrics, PriceRange, FinancialHistory, FinancialPeriod, ProfitMarginMetrics
 
 
 class MockStockService(StockService):
@@ -138,6 +138,14 @@ class MockStockService(StockService):
             )
         ]
         
+        # Create profit margin metrics
+        apple_profit_margins = ProfitMarginMetrics(
+            latest=Decimal('24.0'),      # Latest quarter margin 
+            one_year_avg=Decimal('23.5'),  # 1-year average
+            two_years_avg=Decimal('22.8'), # 2-year average  
+            four_years_avg=Decimal('21.2') # 4-year average
+        )
+        
         apple_stock = StockInfo(
             symbol="AAPL",
             company_name="Apple Inc.",
@@ -162,6 +170,7 @@ class MockStockService(StockService):
             growth_metrics=apple_growth,
             price_range=apple_range,
             financial_history=apple_financial_history,
+            profit_margin_metrics=apple_profit_margins,
             last_updated=datetime.now(),
             data_quality_score=1.0
         )

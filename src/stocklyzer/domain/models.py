@@ -37,6 +37,23 @@ class GrowthMetrics:
 
 
 @dataclass
+class ProfitMarginMetrics:
+    """Profit margin performance over different periods."""
+    
+    latest: Optional[Decimal] = None
+    one_year_avg: Optional[Decimal] = None
+    two_years_avg: Optional[Decimal] = None
+    four_years_avg: Optional[Decimal] = None
+    
+    def __post_init__(self):
+        """Validate and quantize profit margin percentages."""
+        for field_name in ["latest", "one_year_avg", "two_years_avg", "four_years_avg"]:
+            value = getattr(self, field_name)
+            if value is not None:
+                setattr(self, field_name, value.quantize(Decimal('0.1')))
+
+
+@dataclass
 class FinancialPeriod:
     """Single period financial data."""
     date: datetime
@@ -65,6 +82,17 @@ class FinancialPeriod:
                 if abs(value) > 1_000_000:
                     value = value / 1_000_000
                 setattr(self, field_name, value.quantize(Decimal('0.01')))
+    
+    @property
+    def profit_margin(self) -> Optional[Decimal]:
+        """Calculate profit margin as percentage."""
+        if self.total_revenue is None or self.net_income is None:
+            return None
+        if self.total_revenue == 0:
+            return None
+        
+        margin = (self.net_income / self.total_revenue) * 100
+        return margin.quantize(Decimal('0.1'))
 
 
 @dataclass
@@ -111,6 +139,25 @@ class FinancialHistory:
         """Calculate free cash flow growth rates."""
         periods = self.annual_periods if period_type == "annual" else self.quarterly_periods
         return self._calculate_growth_rates(periods, "free_cash_flow")
+    
+    def get_average_profit_margins(self, years: int) -> Optional[Decimal]:
+        """Calculate average profit margin over specified number of years."""
+        if not self.annual_periods or len(self.annual_periods) < years:
+            return None
+
+        relevant_periods = self.annual_periods[:years]
+        margins = []
+
+        for period in relevant_periods:
+            margin = period.profit_margin
+            if margin is not None:
+                margins.append(margin)
+        
+        if not margins:
+            return None
+        
+        average = sum(margins) / len(margins)
+        return average.quantize(Decimal('0.1'))
     
     def _calculate_growth_rates(self, periods: List[FinancialPeriod], metric: str) -> List[Optional[Decimal]]:
         """Calculate period-over-period growth rates with proper handling for negative base values."""
@@ -212,6 +259,7 @@ class StockInfo:
     growth_metrics: Optional[GrowthMetrics] = None
     price_range: Optional[PriceRange] = None
     financial_history: Optional[FinancialHistory] = None
+    profit_margin_metrics: Optional[ProfitMarginMetrics] = None
     data_quality_score: float = 1.0
     
     def __post_init__(self):
