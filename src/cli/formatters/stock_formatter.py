@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 from typing import Optional, List, Tuple
-from stocklyzer.domain.models import StockInfo, GrowthMetrics, PriceRange
+from stocklyzer.domain.models import StockInfo, GrowthMetrics, PriceRange, ProfitMarginMetrics
 
 
 class StockDisplayFormatter:
@@ -170,4 +170,39 @@ class StockDisplayFormatter:
             ("3 Years", formatter.format_growth_value(growth_metrics.three_years)),
             ("5 Years", formatter.format_growth_value(growth_metrics.five_years)),
             ("10 Years", formatter.format_growth_value(growth_metrics.ten_years))
+        ]
+    
+    @staticmethod
+    def format_profit_margin_value(margin: Optional[Decimal]) -> str:
+        """Format profit margin percentage with color coding."""
+        if margin is None:
+            return "[dim]N/A[/dim]"
+        
+        if margin >= 20:
+            return f"[green]{margin:.1f}%[/green]"
+        elif margin >= 10:
+            return f"[cyan]{margin:.1f}%[/cyan]"
+        elif margin >= 0:
+            return f"[yellow]{margin:.1f}%[/yellow]"
+        else:
+            return f"[red]{margin:.1f}%[/red]"
+    
+    @staticmethod
+    def format_profit_margin_data(profit_margin_metrics: Optional[ProfitMarginMetrics]) -> List[Tuple[str, str]]:
+        """Format profit margin data for display."""
+        formatter = StockDisplayFormatter()
+        
+        if not profit_margin_metrics:
+            return [
+                ("Latest", "[dim]N/A[/dim]"),
+                ("1-Year Avg", "[dim]N/A[/dim]"),
+                ("2-Year Avg", "[dim]N/A[/dim]"),
+                ("4-Year Avg", "[dim]N/A[/dim]")
+            ]
+        
+        return [
+            ("Latest", formatter.format_profit_margin_value(profit_margin_metrics.latest)),
+            ("1-Year Avg", formatter.format_profit_margin_value(profit_margin_metrics.one_year_avg)),
+            ("2-Year Avg", formatter.format_profit_margin_value(profit_margin_metrics.two_years_avg)),
+            ("4-Year Avg", formatter.format_profit_margin_value(profit_margin_metrics.four_years_avg))
         ]

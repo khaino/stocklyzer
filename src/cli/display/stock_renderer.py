@@ -46,10 +46,12 @@ class StockRenderer:
         # Get formatted data
         fundamentals_data = self.stock_formatter.format_fundamentals_data(stock_info)
         growth_data = self.stock_formatter.format_growth_data(stock_info.growth_metrics)
+        profit_margin_data = self.stock_formatter.format_profit_margin_data(stock_info.profit_margin_metrics)
         
         # Create tables
         fundamentals_table = self._create_data_table(fundamentals_data)
         growth_table = self._create_data_table(growth_data)
+        profit_margin_table = self._create_data_table(profit_margin_data)
         
         # Create panels
         fundamentals_panel = Table(show_header=False, box=None)
@@ -62,8 +64,13 @@ class StockRenderer:
         growth_panel.add_row("[bold magenta]🚀 Growth Performance[/bold magenta]")
         growth_panel.add_row(growth_table)
         
-        # Display in columns
-        self.console.print(Columns([fundamentals_panel, growth_panel], equal=True, expand=False))
+        profit_margin_panel = Table(show_header=False, box=None)
+        profit_margin_panel.add_column()
+        profit_margin_panel.add_row("[bold cyan]💰 Profit Margins[/bold cyan]")
+        profit_margin_panel.add_row(profit_margin_table)
+        
+        # Display in three columns
+        self.console.print(Columns([fundamentals_panel, growth_panel, profit_margin_panel], equal=True, expand=False))
         self.console.print()
     
     def render_all(self, stock_info: StockInfo) -> None:
