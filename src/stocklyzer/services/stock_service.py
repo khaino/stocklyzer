@@ -523,11 +523,9 @@ class YFinanceStockService(StockService):
             # Get latest profit margin from ticker.info first (more reliable)
             latest_margin = self._ticker.info.get('profitMargins', None)
             if latest_margin:
-                latest_margin = Decimal(str(latest_margin * 100)).quantize(Decimal('0.01'))
+                latest_margin = Decimal(str(latest_margin * 100)).quantize(Decimal('0.1'))
             elif financial_history and financial_history.annual_periods:
                 latest_margin = financial_history.annual_periods[0].profit_margin
-
-            print(f" annual_periods: {financial_history.annual_periods}")
 
             # Calculate averages from historical data
             one_year_avg = financial_history.get_average_profit_margins(1)

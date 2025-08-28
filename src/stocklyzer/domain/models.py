@@ -50,7 +50,7 @@ class ProfitMarginMetrics:
         for field_name in ["latest", "one_year_avg", "two_years_avg", "four_years_avg"]:
             value = getattr(self, field_name)
             if value is not None:
-                setattr(self, field_name, value.quantize(Decimal('0.01')))
+                setattr(self, field_name, value.quantize(Decimal('0.1')))
 
 
 @dataclass
@@ -92,7 +92,7 @@ class FinancialPeriod:
             return None
         
         margin = (self.net_income / self.total_revenue) * 100
-        return margin.quantize(Decimal('0.01'))
+        return margin.quantize(Decimal('0.1'))
 
 
 @dataclass
@@ -157,7 +157,7 @@ class FinancialHistory:
             return None
         
         average = sum(margins) / len(margins)
-        return average.quantize(Decimal('0.01'))
+        return average.quantize(Decimal('0.1'))
     
     def _calculate_growth_rates(self, periods: List[FinancialPeriod], metric: str) -> List[Optional[Decimal]]:
         """Calculate period-over-period growth rates with proper handling for negative base values."""
